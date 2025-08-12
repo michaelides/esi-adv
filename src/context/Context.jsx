@@ -115,13 +115,23 @@ const ContextProvider = (props) => {
         showToast._t = setTimeout(() => setToast(null), ms);
     };
 
-    
+    const handleApiResponse = (response, sid, isEdit = false, editedHistory = null) => {
+        const responseHtml = marked.parse(response || '', { breaks: true });
 
-    const delayPara = (index, nextWord) => {
-		setTimeout(function () {
-			setResultData((prev) => prev + nextWord);
-		}, 20 * index);
-	};
+        if (isEdit) {
+            const finalMessages = [...editedHistory, { role: 'assistant', content: responseHtml }];
+            setMessages(finalMessages);
+            setSessions(prev => prev.map(x => x.id === sid ? { ...x, messages: finalMessages } : x));
+        } else {
+            setMessages(prev => {
+                const out = [...prev];
+                const idx = out.length - 1;
+                if (idx >= 0 && out[idx].role === 'assistant') out[idx] = { ...out[idx], content: responseHtml };
+                return out;
+            });
+            setSessions(prev => prev.map(s => s.id === sid ? ({ ...s, messages: [...s.messages.slice(0, -1), { role: 'assistant', content: responseHtml }] }) : s));
+        }
+    };
 
     const newChat = async () => {
         // Reset UI to landing/new chat. Do not create DB rows.
@@ -227,25 +237,11 @@ const ContextProvider = (props) => {
             console.log('Calling runChatWithHistory with cleanHistory:', cleanHistory, 'verbosity:', verbosity, 'temperature:', temperature);
             const res = await runChatWithHistory(cleanHistory, { verbosity, temperature });
             const response = String(res?.text ?? '');
-            const responseHtml = marked.parse(response || '', { breaks: true });
-            // Replace last assistant placeholder
-            setMessages(prev => {
-                const out = [...prev];
-                const idx = out.length - 1;
-                if (idx >= 0 && out[idx].role === 'assistant') out[idx] = { ...out[idx], content: responseHtml };
-                return out;
-            });
-            if (sid2) setSessions(prev => prev.map(s => s.id === sid2 ? ({ ...s, messages: [...s.messages.slice(0, -1), { role: 'assistant', content: responseHtml }] }) : s));
+            handleApiResponse(response, sid2);
         } catch (error) {
             console.error('Error in onSent:', error);
             const fallback = "Sorry, I can't complete that request. Please try again.";
-            setMessages(prev => {
-                const out = [...prev];
-                const idx = out.length - 1;
-                if (idx >= 0 && out[idx].role === 'assistant') out[idx] = { ...out[idx], content: fallback };
-                return out;
-            });
-            if (sid2) setSessions(prev => prev.map(s => s.id === sid2 ? ({ ...s, messages: [...s.messages.slice(0, -1), { role: 'assistant', content: fallback }] }) : s));
+            handleApiResponse(fallback, sid2);
         } finally {
             setLoading(false);
         }
@@ -439,20 +435,10 @@ const ContextProvider = (props) => {
         try {
             const res = await runChatWithHistory(edited, { verbosity, temperature });
             let response = String(res?.text ?? '');
-            const responseHtml = marked.parse(response || '', { breaks: true });
-
-            const finalMessages = [...edited, { role: 'assistant', content: responseHtml }];
-            setMessages(finalMessages);
-            setSessions(prev => prev.map(x => x.id === sid ? { ...x, messages: finalMessages } : x));
-
-            setResultData('');
-            const words = response.split(' ');
-            words.forEach((w, i) => setTimeout(() => setResultData(prev => prev + w + ' '), 20 * i));
+            handleApiResponse(response, sid, true, edited);
         } catch (e) {
             const fallback = "Sorry, I can't complete that request. Please try again.";
-            const finalMessages = [...edited, { role: 'assistant', content: fallback }];
-            setMessages(finalMessages);
-            setSessions(prev => prev.map(x => x.id === sid ? { ...x, messages: finalMessages } : x));
+            handleApiResponse(fallback, sid, true, edited);
             setResultData(fallback);
         } finally {
             setLoading(false);
@@ -539,25 +525,11 @@ const ContextProvider = (props) => {
         try {
             const res = await runChatWithHistory(cleanHistory, { verbosity, temperature });
             const response = String(res?.text ?? '');
-            const responseHtml = marked.parse(response || '', { breaks: true });
-            // Replace last assistant placeholder
-            setMessages(prev => {
-                const out = [...prev];
-                const last = out.length - 1;
-                if (last >= 0 && out[last].role === 'assistant') out[last] = { ...out[last], content: responseHtml };
-                return out;
-            });
-            if (sid) setSessions(prev => prev.map(s => s.id === sid ? ({ ...s, messages: [...s.messages.slice(0, -1), { role: 'assistant', content: responseHtml }] }) : s));
+            handleApiResponse(response, sid);
         } catch (error) {
             console.error('Error in redoAssistantAt:', error);
             const fallback = "Sorry, I can't complete that request. Please try again.";
-            setMessages(prev => {
-                const out = [...prev];
-                const last = out.length - 1;
-                if (last >= 0 && out[last].role === 'assistant') out[last] = { ...out[last], content: fallback };
-                return out;
-            });
-            if (sid) setSessions(prev => prev.map(s => s.id === sid ? ({ ...s, messages: [...s.messages.slice(0, -1), { role: 'assistant', content: fallback }] }) : s));
+            handleApiResponse(fallback, sid);
         } finally {
             setLoading(false);
             showToast('Regenerated', 'success');
