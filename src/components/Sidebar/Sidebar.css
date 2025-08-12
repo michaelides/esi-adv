@@ -1,0 +1,339 @@
+.sidebar{
+    min-height: 100vh;
+    height: 100vh; /* constrain to viewport */
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: #f0f4f9;
+    padding: 25px 15px;
+    width: 280px;
+    transition: width 200ms ease, box-shadow 200ms ease;
+    overflow: visible; /* allow settings panel to overflow */
+    flex: 0 0 auto; /* don't stretch in flex layout */
+    position: relative; /* allow z-index */
+    z-index: 2;
+}
+
+/* Dark mode sidebar */
+[data-theme="dark"] .sidebar{
+    background-color: #272a30 !important; /* neutral dark, no blue tint */
+    color: #ffffff !important;            /* keep text white */
+}
+
+/* Ensure nested text/icons inherit white in dark mode */
+[data-theme="dark"] .sidebar *,
+[data-theme="dark"] .sidebar .new-chat,
+[data-theme="dark"] .sidebar .recent-entry,
+[data-theme="dark"] .sidebar .recent-entry .pin-badge,
+[data-theme="dark"] .sidebar .recent-title,
+[data-theme="dark"] .sidebar .bottom,
+[data-theme="dark"] .sidebar .bottom-item{
+    color: inherit !important;
+}
+
+/* Icon images that are SVG via currentColor will follow; raster icons remain unchanged */
+[data-theme="dark"] .sidebar .recent-entry .more-btn svg,
+[data-theme="dark"] .sidebar .menu svg{
+    fill: currentColor !important;
+    stroke: currentColor !important;
+}
+
+/* Adjust hover backgrounds to suit dark */
+[data-theme="dark"] .sidebar .recent-entry:hover{ background-color: rgba(255,255,255,0.06); }
+[data-theme="dark"] .sidebar .recent-entry .more-btn:hover{ background: rgba(255,255,255,0.06); }
+
+/* Invert raster icons (PNG/JPG) in dark mode */
+[data-theme="dark"] .sidebar img,
+[data-theme="dark"] .sidebar .recent-entry .more-btn img{
+    filter: invert(1) brightness(1.2) contrast(0.95);
+}
+[data-theme="dark"] .sidebar .new-chat img{
+    filter: invert(1) brightness(1.2) contrast(0.95);
+}
+
+.sidebar.collapsed{
+    width: 70px;
+}
+
+.sidebar.collapsed:hover{
+    width: 280px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.sidebar img,
+.sidebar .menu,
+.sidebar .new-chat img {
+    width: 20px;
+    height: 20px;
+}
+
+.sidebar .menu{
+    display: block;
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.sidebar .new-chat{
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;                 /* match recent-entry */
+    background-color: transparent;      /* follow bottom buttons */
+    border-radius: 50px;                /* same pill shape */
+    font-size: 14px;
+    color: inherit;                     /* follow sidebar text color */
+    cursor: pointer;
+}
+.sidebar .new-chat img{ width: 20px; }
+.sidebar .new-chat p{ margin: 0; }
+
+/* Light mode hover same as recent-entry */
+.sidebar .new-chat:hover{ background-color: #e2e6eb; }
+
+/* Dark mode: follow bottom buttons scheme */
+[data-theme="dark"] .sidebar .new-chat{
+    background-color: transparent !important;
+    color: inherit !important;          /* white via sidebar */
+}
+[data-theme="dark"] .sidebar .new-chat:hover{ background-color: rgba(255,255,255,0.06) !important; }
+[data-theme="dark"] .sidebar .new-chat *{ color: inherit !important; }
+
+/* Make "+ New Chat" circular when collapsed */
+.sidebar.collapsed .new-chat{
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    justify-content: center;
+}
+.sidebar.collapsed .new-chat img{
+    width: 20px;
+}
+.sidebar.collapsed .new-chat p{
+    display: none;
+}
+.sidebar.collapsed:hover .new-chat{
+    width: auto;
+    height: auto;
+    padding: 10px 15px;
+}
+.sidebar.collapsed:hover .new-chat p{
+    display: inline;
+}
+
+/* Fade text/content on collapse */
+.sidebar .new-chat p,
+.sidebar .recent,
+.sidebar .bottom p{
+    transition: opacity 150ms ease;
+}
+
+.sidebar.collapsed .new-chat p,
+.sidebar.collapsed .recent,
+.sidebar.collapsed .bottom p{
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Hide recent content when collapsed; reveal on hover */
+.sidebar.collapsed .recent{
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 150ms ease, visibility 150ms ease;
+}
+.sidebar.collapsed:hover .recent{
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* Increase specificity to defeat overrides */
+.app .sidebar.collapsed:hover .recent{
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+.sidebar.collapsed:hover .recent *{
+    pointer-events: auto;
+    visibility: visible;
+}
+
+.sidebar.collapsed:hover .new-chat p,
+.sidebar.collapsed:hover .recent,
+.sidebar.collapsed:hover .bottom p{
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.sidebar .top{
+    display: flex;
+    flex-direction: column;
+}
+.sidebar .bottom{
+    flex: 0 0 auto; /* keep visible; not part of scroll */
+}
+.sidebar .recent{
+    margin-top: 80px;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 1.5s;
+    overflow-y: auto; /* scroll inside list */
+    /* reserve space for brand + toggle + new chat at top and bottom section */
+    max-height: calc(100vh - 260px);
+    padding-bottom: 70px; /* ensure bottom actions aren’t overlapped by scrollbar */
+}
+.sidebar.collapsed .recent{
+    max-height: calc(100vh - 200px);
+    padding-bottom: 70px;
+}
+.sidebar.collapsed:hover .recent{
+    max-height: calc(100vh - 200px);
+}
+
+.sidebar .recent-title{
+    margin-top: 30px;
+    margin-bottom: 10px;   
+}
+
+
+.sidebar .recent .divider{
+    height: 1px;
+    background: var(--border);
+    margin: 6px 8px;
+}
+
+.sidebar .recent-entry{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 50px;
+    color: #282828;
+    cursor: pointer;
+    position: relative;
+    font-size: 14px;
+}
+.sidebar .recent-entry .pin-badge{
+    color: #f59e0b; /* amber */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.sidebar .recent-entry.active .pin-badge{ filter: saturate(1.1); }
+.sidebar .recent-entry .title{
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.sidebar .recent-entry .rename-input{
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 14px;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel-bg);
+    color: inherit;
+}
+.sidebar .recent-entry .more-btn{
+    width: 20px;
+    height: 20px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+}
+.sidebar .recent-entry .more-btn:hover{ opacity: 1; background: rgba(0,0,0,0.06); }
+.sidebar .recent-entry .menu{
+    position: absolute;
+    right: 8px;
+    top: 36px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    padding: 6px 0;
+    min-width: 140px;
+    z-index: 1000;
+    height: auto;
+    min-height: fit-content;
+}
+.sidebar .recent-entry .menu .item{
+    padding: 8px 12px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+.sidebar .recent-entry .menu .item svg{
+    width: 16px;
+    height: 16px;
+    opacity: 0.9;
+}
+.sidebar .recent-entry .menu .item:hover{ background: rgba(0,0,0,0.06); }
+
+.sidebar .recent-entry:hover{
+    background-color: #e2e6eb;    
+}
+
+.sidebar .bottom{
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.sidebar .bottom-item{
+    padding-right:10px;
+    cursor: pointer;
+}
+
+/* Brand header */
+.sidebar .sidebar-brand{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 6px 12px 6px;
+    font-weight: 700;
+    font-size: 16px;
+}
+.sidebar .sidebar-brand .fa{ font-size: 20px; }
+.sidebar .sidebar-brand .esi-logo-container {
+    width: 90px;
+    height: 40px; /* Adjust as needed */
+    cursor: pointer;
+    background-color: #000; /* Default for light mode */
+    -webkit-mask: url('/src/assets/esi_logo.png') no-repeat center;
+    mask: url('/src/assets/esi-logo.png') no-repeat center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+}
+
+/* In dark mode, change the background color to white */
+[data-theme="dark"] .sidebar .sidebar-brand .esi-logo-container {
+    background-color: #fff;
+}
+
+.sidebar.collapsed .sidebar-brand .brand-text{ display: none; }
+
+.sidebar-toggle {
+    position: absolute;
+    top: 25px;
+    right: 15px;
+    z-index: 10;
+}
+
+.sidebar .new-chat {
+    position: absolute;
+    top: 70px;
+    left: 15px;
+}
+
+
+
+@media (max-width: 600px){
+    .sidebar{
+        display: none;
+    }
+}

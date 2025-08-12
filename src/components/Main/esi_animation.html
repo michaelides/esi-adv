@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESI Dot Loading Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        .loader {
+            position: relative;
+            width: 300px;
+            height: 120px;
+        }
+
+        .letter {
+            position: absolute;
+            width: 80px;
+            height: 120px;
+        }
+
+        .letter-e { left: 0; }
+        .letter-s { left: 100px; }
+        .letter-i { left: 200px; }
+
+        .dot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            animation: dotDance 4s infinite ease-in-out;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Letter E dots */
+        .letter-e .dot:nth-child(1) { top: 0; left: 0; animation-delay: 0s; }
+        .letter-e .dot:nth-child(2) { top: 0; left: 15px; animation-delay: 0.1s; }
+        .letter-e .dot:nth-child(3) { top: 0; left: 30px; animation-delay: 0.2s; }
+        .letter-e .dot:nth-child(4) { top: 0; left: 45px; animation-delay: 0.3s; }
+        .letter-e .dot:nth-child(5) { top: 15px; left: 0; animation-delay: 0.4s; }
+        .letter-e .dot:nth-child(6) { top: 30px; left: 0; animation-delay: 0.5s; }
+        .letter-e .dot:nth-child(7) { top: 45px; left: 0; animation-delay: 0.6s; }
+        .letter-e .dot:nth-child(8) { top: 45px; left: 15px; animation-delay: 0.7s; }
+        .letter-e .dot:nth-child(9) { top: 45px; left: 30px; animation-delay: 0.8s; }
+        .letter-e .dot:nth-child(10) { top: 60px; left: 0; animation-delay: 0.9s; }
+        .letter-e .dot:nth-child(11) { top: 75px; left: 0; animation-delay: 1.0s; }
+        .letter-e .dot:nth-child(12) { top: 90px; left: 0; animation-delay: 1.1s; }
+        .letter-e .dot:nth-child(13) { top: 90px; left: 15px; animation-delay: 1.2s; }
+        .letter-e .dot:nth-child(14) { top: 90px; left: 30px; animation-delay: 1.3s; }
+        .letter-e .dot:nth-child(15) { top: 90px; left: 45px; animation-delay: 1.4s; }
+
+        /* Letter S dots */
+        .letter-s .dot:nth-child(1) { top: 0; left: 15px; animation-delay: 0.2s; }
+        .letter-s .dot:nth-child(2) { top: 0; left: 30px; animation-delay: 0.3s; }
+        .letter-s .dot:nth-child(3) { top: 0; left: 45px; animation-delay: 0.4s; }
+        .letter-s .dot:nth-child(4) { top: 15px; left: 0; animation-delay: 0.5s; }
+        .letter-s .dot:nth-child(5) { top: 30px; left: 15px; animation-delay: 0.6s; }
+        .letter-s .dot:nth-child(6) { top: 30px; left: 30px; animation-delay: 0.7s; }
+        .letter-s .dot:nth-child(7) { top: 30px; left: 45px; animation-delay: 0.8s; }
+        .letter-s .dot:nth-child(8) { top: 45px; left: 60px; animation-delay: 0.9s; }
+        .letter-s .dot:nth-child(9) { top: 60px; left: 45px; animation-delay: 1.0s; }
+        .letter-s .dot:nth-child(10) { top: 60px; left: 30px; animation-delay: 1.1s; }
+        .letter-s .dot:nth-child(11) { top: 60px; left: 15px; animation-delay: 1.2s; }
+        .letter-s .dot:nth-child(12) { top: 75px; left: 0; animation-delay: 1.3s; }
+        .letter-s .dot:nth-child(13) { top: 90px; left: 15px; animation-delay: 1.4s; }
+        .letter-s .dot:nth-child(14) { top: 90px; left: 30px; animation-delay: 1.5s; }
+        .letter-s .dot:nth-child(15) { top: 90px; left: 45px; animation-delay: 1.6s; }
+
+        /* Letter I dots */
+        .letter-i .dot:nth-child(1) { top: 0; left: 0; animation-delay: 0.4s; }
+        .letter-i .dot:nth-child(2) { top: 0; left: 15px; animation-delay: 0.5s; }
+        .letter-i .dot:nth-child(3) { top: 0; left: 30px; animation-delay: 0.6s; }
+        .letter-i .dot:nth-child(4) { top: 15px; left: 15px; animation-delay: 0.7s; }
+        .letter-i .dot:nth-child(5) { top: 30px; left: 15px; animation-delay: 0.8s; }
+        .letter-i .dot:nth-child(6) { top: 45px; left: 15px; animation-delay: 0.9s; }
+        .letter-i .dot:nth-child(7) { top: 60px; left: 15px; animation-delay: 1.0s; }
+        .letter-i .dot:nth-child(8) { top: 75px; left: 15px; animation-delay: 1.1s; }
+        .letter-i .dot:nth-child(9) { top: 90px; left: 0; animation-delay: 1.2s; }
+        .letter-i .dot:nth-child(10) { top: 90px; left: 15px; animation-delay: 1.3s; }
+        .letter-i .dot:nth-child(11) { top: 90px; left: 30px; animation-delay: 1.4s; }
+
+        @keyframes dotDance {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(1);
+                opacity: 1;
+                background: #fff;
+            }
+            15% {
+                transform: translateY(-20px) rotate(180deg) scale(1.2);
+                opacity: 0.8;
+                background: #ff6b6b;
+            }
+            30% {
+                transform: translateY(10px) rotate(360deg) scale(0.8);
+                opacity: 0.6;
+                background: #4ecdc4;
+            }
+            45% {
+                transform: translateY(-15px) rotate(540deg) scale(1.1);
+                opacity: 0.4;
+                background: #45b7d1;
+            }
+            60% {
+                transform: translateY(25px) rotate(720deg) scale(0.6);
+                opacity: 0.2;
+                background: #f9ca24;
+            }
+            75% {
+                transform: translateY(-30px) rotate(900deg) scale(1.3);
+                opacity: 0.1;
+                background: #6c5ce7;
+            }
+            85% {
+                transform: translateY(15px) rotate(1080deg) scale(0.9);
+                opacity: 0.3;
+                background: #a29bfe;
+            }
+            95% {
+                transform: translateY(-10px) rotate(1260deg) scale(1.1);
+                opacity: 0.7;
+                background: #fd79a8;
+            }
+            100% {
+                transform: translateY(0) rotate(1440deg) scale(1);
+                opacity: 1;
+                background: #fff;
+            }
+        }
+
+        .loader::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 40px;
+            background: linear-gradient(to bottom, transparent, #fff, transparent);
+            animation: scanLine 4s infinite linear;
+        }
+
+        @keyframes scanLine {
+            0% { left: -10px; }
+            100% { left: 310px; }
+        }
+
+        .loading-text {
+            position: absolute;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 18px;
+            font-weight: 300;
+            letter-spacing: 3px;
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* Additional floating particles */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float 6s infinite linear;
+        }
+
+        .particle:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { top: 60%; left: 80%; animation-delay: 1s; }
+        .particle:nth-child(3) { top: 80%; left: 20%; animation-delay: 2s; }
+        .particle:nth-child(4) { top: 40%; left: 90%; animation-delay: 3s; }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader">
+        <!-- Letter E -->
+        <div class="letter letter-e">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        
+        <!-- Letter S -->
+        <div class="letter letter-s">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        
+        <!-- Letter I -->
+        <div class="letter letter-i">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    
+    <!-- Floating particles -->
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+</body>
+</html>
