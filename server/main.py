@@ -122,7 +122,6 @@ class SSEQueueHandler(AsyncCallbackHandler):
     def __init__(self, queue: "asyncio.Queue[str]"):
         self.queue = queue
         self.count = 0
-        self.is_done = False
 
     def on_llm_new_token(self, token: str, **kwargs):  # type: ignore[override]
         # Forward tokens into async queue for SSE loop
@@ -148,14 +147,9 @@ class SSEQueueHandler(AsyncCallbackHandler):
         message = tool_map.get(tool_name, f"Running tool: {tool_name}...")
         self.queue.put_nowait(json.dumps({'type': 'status', 'message': message}))
 
-    def on_chain_end(self, outputs, **kwargs):
-        # LangGraph chains finish, signal end of stream
-        if not self.is_done:
-            self.is_done = True
-            self.queue.put_nowait(None)
-
     # No-ops to satisfy interface without raising
     def on_chat_model_start(self, *args, **kwargs): pass
+    def on_chain_end(self, *args, **kwargs): pass
     def on_chain_start(self, *args, **kwargs): pass
     def on_chain_error(self, *args, **kwargs): pass
     def on_llm_start(self, *args, **kwargs): pass
@@ -246,15 +240,17 @@ async def chat_stream(
         task = asyncio.create_task(asyncio.to_thread(agent_local.invoke, payload, config))
         
         # Stream events as they arrive
-        while True:
+        while not task.done() or not q.empty():
             try:
-                item_json = await q.get()
-                if item_json is None:  # End of stream
-                    break
+                # Wait for an item with a timeout
+                item_json = await asyncio.wait_for(q.get(), timeout=0.1)
 
                 # Yield the JSON data as an SSE event
                 yield f"data: {item_json}\n\n"
 
+            except asyncio.TimeoutError:
+                # No item in queue, just continue and check task status again
+                continue
             except asyncio.CancelledError:
                 break
             except Exception:
