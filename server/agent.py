@@ -24,7 +24,7 @@ load_dotenv()
 # Import RAG tools
 import asyncio
 from rag import search_documents_tool, store_document_tool, get_document_tool
-from vector_db import vector_db
+from vector_db import get_vector_db
 
 # Import Google Generative AI types for GenerationConfig and SafetySettings
 from google.generativeai.types import GenerationConfig, HarmCategory, HarmBlockThreshold
@@ -192,7 +192,7 @@ def create_agent(temperature: float = 0.5, model: str = "gemini-2.5-flash", verb
         Tool(
             name="search_vector_db",
             description="Search the vector database for information from uploaded PDFs.",
-            func=vector_db.search,
+            func=lambda q: get_vector_db().search(q),
         ),
     ]
     

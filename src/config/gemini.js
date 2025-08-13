@@ -51,7 +51,7 @@ export async function streamChatWithHistory(messages, options = {}, file = null,
     while (true) {
       const { done, value } = await reader.read();
       if (done) {
-        break;
+        break; // Exit loop when stream is finished
       }
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
@@ -60,20 +60,28 @@ export async function streamChatWithHistory(messages, options = {}, file = null,
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           const jsonStr = line.slice(6);
-          if (jsonStr.trim() === '{"type": "done"}') {
-            console.log('Stream finished.');
-            return;
-          }
+          if (!jsonStr.trim()) continue;
           try {
             const data = JSON.parse(jsonStr);
+            // Pass data to the callback
             if (onDelta) {
               onDelta(data);
             }
+            // If server signals 'done', we can stop
+            if (data.type === 'done') {
+              return;
+            }
           } catch (e) {
-            console.error('Error parsing stream data:', e);
+            console.error('Error parsing stream data:', e, `|${jsonStr}|`);
           }
         }
       }
+    }
+
+    // If the loop finishes, the stream has closed without a 'done' event.
+    // We need to signal completion to the client.
+    if (onDelta) {
+      onDelta({ type: 'done' });
     }
   } catch (error) {
     console.error('Error communicating with the streaming API:', error);
