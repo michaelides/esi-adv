@@ -8,6 +8,7 @@ import sys
 import asyncio
 from pathlib import Path
 import logging
+import pytest
 
 # Add the server directory to the path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -58,6 +59,7 @@ def test_database_connection():
         logger.error(f"❌ Database connection failed: {e}")
         return False
 
+@pytest.mark.anyio
 async def test_document_ingestion():
     """Test document ingestion."""
     logger.info("Testing document ingestion...")
@@ -85,6 +87,7 @@ async def test_document_ingestion():
         logger.error(f"❌ Document ingestion failed: {e}")
         return False
 
+@pytest.mark.anyio
 async def test_document_search():
     """Test document search."""
     logger.info("Testing document search...")
@@ -112,6 +115,7 @@ async def test_document_search():
         logger.error(f"❌ Document search failed: {e}")
         return False
 
+@pytest.mark.anyio
 async def test_agent_integration():
     """Test agent integration."""
     logger.info("Testing agent integration...")

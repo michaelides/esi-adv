@@ -117,35 +117,41 @@ async def chat(
     return {"text": text}
 
 
-class SSEQueueHandler(AsyncCallbackHandler):
+class SSEQueueHandler(BaseCallbackHandler):
     def __init__(self, queue: "asyncio.Queue[str]"):
         self.queue = queue
         self.count = 0
+        self.is_done = False
 
-    async def on_llm_new_token(self, token: str, **kwargs):  # type: ignore[override]
+    def on_llm_new_token(self, token: str, **kwargs) -> None:
         # Forward tokens into async queue for SSE loop
+        import json
         self.count += 1
-        await self.queue.put(token)
+        self.queue.put_nowait(json.dumps({'type': 'delta', 'text': token}))
 
-    async def on_llm_end(self, response, **kwargs):  # type: ignore[override]
-        # Signal end of stream
-        await self.queue.put(None)
+    def on_llm_end(self, response, **kwargs) -> None:
+        # Do not signal end of stream here; agent is still running
+        pass
 
-    # No-ops to satisfy interface without raising
-    async def on_chat_model_start(self, *args, **kwargs): return
-    async def on_chain_start(self, *args, **kwargs): return
-    async def on_chain_end(self, *args, **kwargs): return
-    async def on_chain_error(self, *args, **kwargs): return
-    async def on_llm_start(self, *args, **kwargs): return
-    async def on_llm_error(self, *args, **kwargs):
-        # Forward error to queue
-        await self.queue.put(None)
-    async def on_tool_start(self, *args, **kwargs): return
-    async def on_tool_end(self, *args, **kwargs): return
-    async def on_tool_error(self, *args, **kwargs): return
-    async def on_text(self, *args, **kwargs): return
-    async def on_agent_action(self, *args, **kwargs): return
-    async def on_agent_finish(self, *args, **kwargs): return
+    def on_tool_start(self, serialized, input_str, **kwargs) -> None:
+        import json
+        tool_name = serialized.get('name')
+        # Map tool names to user-friendly text
+        tool_map = {
+            "tavily_search": "Searching the web...",
+            "search_vector_db": "Searching documents...",
+            "CustomSemanticScholarQueryRun": "Searching academic papers...",
+            "PythonREPLTool": "Analyzing data...",
+            "crawl4ai_scraper": "Scraping website...",
+        }
+        message = tool_map.get(tool_name, f"Running tool: {tool_name}...")
+        self.queue.put_nowait(json.dumps({'type': 'status', 'message': message}))
+
+    def on_chain_end(self, outputs, **kwargs) -> None:
+        # LangGraph chains finish, signal end of stream
+        if not self.is_done:
+            self.is_done = True
+            self.queue.put_nowait(None)
 
 @app.get("/thinking")
 async def thinking():
@@ -181,17 +187,16 @@ async def chat_stream(
     async def sse_generator():
         import json
         
-        # Simple streaming approach for all model types
-        q: asyncio.Queue[str] = asyncio.Queue()
+        q: asyncio.Queue[str | None] = asyncio.Queue()
         handler = SSEQueueHandler(q)
-        
-        # Initialize LLM with streaming support
+
+        # Create a streaming-capable LLM. Callbacks are now managed by the agent executor.
         if model.startswith("gemini"):
             llm = ChatGoogleGenerativeAI(
                 model=model,
                 temperature=temperature,
                 google_api_key=settings.GOOGLE_API_KEY,
-                callbacks=[handler]
+                streaming=True,
             )
         else:
             # OpenAI-compatible models
@@ -199,48 +204,44 @@ async def chat_stream(
                 model=model,
                 temperature=temperature,
                 streaming=True,
-                callbacks=[handler],
                 openai_api_key=settings.OPENROUTER_API_KEY,
-                base_url="https://openrouter.ai/api/v1"
+                base_url="https://openrouter.ai/api/v1",
             )
         
-        # Create agent with streaming LLM
-        agent_local = create_agent(temperature=temperature, model=model, verbosity=verbosity, llm=llm, debug=debug, file_content=file_content)
+        # Create agent with the streaming LLM
+        agent_local = create_agent(
+            temperature=temperature,
+            model=model,
+            verbosity=verbosity,
+            llm=llm,
+            debug=debug,
+            file_content=file_content
+        )
         
         payload = {"messages": messages_data}
         if file_content:
             payload["file_content"] = file_content
 
-        # Run agent in background
-        task = asyncio.create_task(asyncio.to_thread(agent_local.invoke, payload))
+        # Run agent in background, passing the handler in the config
+        config = {"callbacks": [handler]}
+        task = asyncio.create_task(asyncio.to_thread(agent_local.invoke, payload, config))
         
-        # Stream tokens as they arrive
+        # Stream events as they arrive
         while True:
             try:
-                token = await q.get()
-                if token is None:  # End of stream
+                item_json = await q.get()
+                if item_json is None:  # End of stream
                     break
 
-                # Check for artifacts (code blocks, plots)
-                if "```python" in token:
-                    parts = token.split("```python")
-                    yield f"data: {json.dumps({'type':'delta','text': parts[0]})}\n\n"
-                    if len(parts) > 1:
-                        code_content = parts[1].split("```")[0]
-                        yield f"data: {json.dumps({'type':'artifact', 'artifact': {'type': 'code', 'content': code_content}})}\n\n"
-                elif "```json" in token:
-                    parts = token.split("```json")
-                    yield f"data: {json.dumps({'type':'delta','text': parts[0]})}\n\n"
-                    if len(parts) > 1:
-                        json_content = parts[1].split("```")[0]
-                        yield f"data: {json.dumps({'type':'artifact', 'artifact': {'type': 'plot', 'content': json_content}})}\n\n"
-                else:
-                    yield f"data: {json.dumps({'type':'delta','text': token})}\n\n"
+                # Yield the JSON data as an SSE event
+                yield f"data: {item_json}\n\n"
 
+            except asyncio.CancelledError:
+                break
             except Exception:
                 break
         
-        # Wait for task completion
+        # Wait for task completion and handle potential errors
         try:
             await task
         except Exception as e:
