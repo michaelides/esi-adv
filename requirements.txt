@@ -24,3 +24,5 @@ openpyxl
 pyreadstat
 pyreadr
 aiosqlite
+supabase
+google-generativeai
