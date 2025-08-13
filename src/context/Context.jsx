@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useRef } from "react";  
-import runChat, { runChatWithHistory } from "../config/gemini";
+import runChat, { runChatWithHistory, streamChatWithHistory } from "../config/gemini";
 import { marked } from 'marked';
 import { supabase } from '../lib/supabaseClient';
 export const Context = createContext();
@@ -38,8 +38,9 @@ const ContextProvider = (props) => {
         } catch { return 1.0; }
     });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    // UI state: limit sessions in sidebar by default
     const [showAllSessions, setShowAllSessions] = useState(false);
+    const [uploadedFiles, setUploadedFiles] = useState([]);
+    const [artifacts, setArtifacts] = useState([]);
 
     // Auth state
     const [user, setUser] = useState(null); // supabase user or null
@@ -144,15 +145,30 @@ const ContextProvider = (props) => {
     }
     
 
-    const onSent = async (prompt) => {
+    const addUploadedFile = (file) => {
+        setUploadedFiles(prev => [...prev, file]);
+    };
+
+    const removeUploadedFile = (fileName) => {
+        setUploadedFiles(prev => prev.filter(f => f.name !== fileName));
+    };
+
+    const addArtifact = (artifact) => {
+        setArtifacts(prev => [...prev, artifact]);
+    };
+
+    const onSent = async (prompt, file = null) => {
 
         // Determine prompt text
         const text = (prompt ?? input ?? '').trim();
-        console.log('onSent called with prompt:', prompt, 'text:', text);
-        if (!text) return;
+        if (!text && !file) return;
+
+        if (file) {
+            addUploadedFile(file);
+        }
 
         // Clear input and show loading
-        setInput('')
+        setInput('');
         setResultData('')
         setLoading(true)
         setShowResult(true)
@@ -232,14 +248,35 @@ const ContextProvider = (props) => {
             } catch {}
         }
 
-        // Call non-streaming endpoint
+        // Call streaming endpoint
         try {
-            console.log('Calling runChatWithHistory with cleanHistory:', cleanHistory, 'verbosity:', verbosity, 'temperature:', temperature);
-            const res = await runChatWithHistory(cleanHistory, { verbosity, temperature });
-            const response = String(res?.text ?? '');
-            handleApiResponse(response, sid2);
+            let fullResponse = "";
+            const onDelta = (delta) => {
+                if (delta.type === 'delta' && delta.text) {
+                    fullResponse += delta.text;
+                    setMessages(prev => {
+                        const newMessages = [...prev];
+                        const lastMessage = newMessages[newMessages.length - 1];
+                        if (lastMessage && lastMessage.role === 'assistant') {
+                            lastMessage.content = marked.parse(fullResponse, { breaks: true });
+                        }
+                        return newMessages;
+                    });
+                } else if (delta.type === 'artifact') {
+                    addArtifact(delta.artifact);
+                } else if (delta.type === 'error') {
+                    console.error('Streaming error:', delta.message);
+                    handleApiResponse("Sorry, an error occurred while streaming the response.", sid2);
+                }
+            };
+
+            await streamChatWithHistory(cleanHistory, { verbosity, temperature }, file, onDelta);
+
+            // After stream is complete, finalize the message state
+            handleApiResponse(fullResponse, sid2);
+
         } catch (error) {
-            console.error('Error in onSent:', error);
+            console.error('Error in onSent (streaming):', error);
             const fallback = "Sorry, I can't complete that request. Please try again.";
             handleApiResponse(fallback, sid2);
         } finally {
@@ -382,9 +419,13 @@ const ContextProvider = (props) => {
         isSettingsOpen,
         openSettings,
         closeSettings,
-        // sidebar session toggle
         showAllSessions,
         setShowAllSessions,
+        uploadedFiles,
+        addUploadedFile,
+        removeUploadedFile,
+        artifacts,
+        addArtifact,
     }
 
     // Add editing function after we have access to state setters

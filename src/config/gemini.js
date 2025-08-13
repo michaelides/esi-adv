@@ -3,12 +3,23 @@ import axios from 'axios';
 const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
 // Preferred: send full chat history
-export async function runChatWithHistory(messages, options = {}) {
+export async function runChatWithHistory(messages, options = {}, file = null) {
   try {
-    const payload = { messages, ...options }; // options: { model, temperature, verbosity }
-    const { data } = await axios.post(`${BACKEND_URL}/chat`, payload, {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    let payload;
+    let headers = {};
+
+    if (file) {
+      payload = new FormData();
+      payload.append('file', file);
+      payload.append('messages', JSON.stringify(messages));
+      payload.append('options', JSON.stringify(options));
+      // Content-Type is set automatically by the browser for FormData
+    } else {
+      payload = { messages, ...options };
+      headers['Content-Type'] = 'application/json';
+    }
+
+    const { data } = await axios.post(`${BACKEND_URL}/chat`, payload, { headers });
     return data; // { text }
   } catch (error) {
     console.error('Error communicating with the API:', error);
@@ -20,4 +31,68 @@ export async function runChatWithHistory(messages, options = {}) {
 export default async function runChat(prompt, options = {}) {
   const messages = [{ role: 'user', content: String(prompt ?? '').trim() }];
   return runChatWithHistory(messages, options);
+}
+
+export async function streamChatWithHistory(messages, options = {}, file = null, onDelta) {
+  try {
+    let payload;
+    let headers = {};
+
+    if (file) {
+      payload = new FormData();
+      payload.append('file', file);
+      payload.append('messages', JSON.stringify(messages));
+      payload.append('options', JSON.stringify(options));
+    } else {
+      payload = JSON.stringify({ messages, ...options });
+      headers['Content-Type'] = 'application/json';
+    }
+
+    const response = await fetch(`${BACKEND_URL}/chat/stream`, {
+      method: 'POST',
+      headers,
+      body: payload,
+    });
+
+    if (!response.body) {
+      throw new Error('Response body is null');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // Keep the last partial line
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const jsonStr = line.slice(6);
+          if (jsonStr.trim() === '{"type": "done"}') {
+            console.log('Stream finished.');
+            return;
+          }
+          try {
+            const data = JSON.parse(jsonStr);
+            if (onDelta) {
+              onDelta(data);
+            }
+          } catch (e) {
+            console.error('Error parsing stream data:', e);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error communicating with the streaming API:', error);
+    if (onDelta) {
+      onDelta({ type: 'error', message: "Sorry, I can't complete that request. Please try again." });
+    }
+  }
 }

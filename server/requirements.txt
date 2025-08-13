@@ -24,13 +24,16 @@ openpyxl
 pyreadstat
 pyreadr
 aiosqlite
+pyreadstat
+pyreadr
 supabase==2.5.1
 google-generativeai==0.8.0
 python-multipart==0.0.12
 beautifulsoup4==4.12.3
 requests==2.31.0
 python-pptx==0.6.23
-PyPDF2==3.0.1
+pypdf
+python-magic
 markdown
 markdownify
 pycryptodome
