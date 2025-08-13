@@ -1,25 +1,18 @@
 import axios from 'axios';
 
-const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+const BACKEND_URL = process.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
 // Preferred: send full chat history
 export async function runChatWithHistory(messages, options = {}, file = null) {
   try {
-    let payload;
-    let headers = {};
-
+    const payload = new FormData();
     if (file) {
-      payload = new FormData();
       payload.append('file', file);
-      payload.append('messages', JSON.stringify(messages));
-      payload.append('options', JSON.stringify(options));
-      // Content-Type is set automatically by the browser for FormData
-    } else {
-      payload = { messages, ...options };
-      headers['Content-Type'] = 'application/json';
     }
+    payload.append('messages', JSON.stringify(messages));
+    payload.append('options', JSON.stringify(options));
 
-    const { data } = await axios.post(`${BACKEND_URL}/chat`, payload, { headers });
+    const { data } = await axios.post(`${BACKEND_URL}/chat`, payload);
     return data; // { text }
   } catch (error) {
     console.error('Error communicating with the API:', error);
@@ -35,22 +28,15 @@ export default async function runChat(prompt, options = {}) {
 
 export async function streamChatWithHistory(messages, options = {}, file = null, onDelta) {
   try {
-    let payload;
-    let headers = {};
-
+    const payload = new FormData();
     if (file) {
-      payload = new FormData();
       payload.append('file', file);
-      payload.append('messages', JSON.stringify(messages));
-      payload.append('options', JSON.stringify(options));
-    } else {
-      payload = JSON.stringify({ messages, ...options });
-      headers['Content-Type'] = 'application/json';
     }
+    payload.append('messages', JSON.stringify(messages));
+    payload.append('options', JSON.stringify(options));
 
     const response = await fetch(`${BACKEND_URL}/chat/stream`, {
       method: 'POST',
-      headers,
       body: payload,
     });
 
