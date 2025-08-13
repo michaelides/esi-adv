@@ -1,9 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from pydantic_settings import BaseSettings
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
 from agent import create_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
@@ -16,19 +14,7 @@ import pyreadr
 from pypdf import PdfReader
 import io
 from vector_db import vector_db
-
-#import os
-
-#load_dotenv("../.env")
-load_dotenv()
-
-class Settings(BaseSettings):
-    GOOGLE_API_KEY: str | None = None
-    TAVILY_API_KEY: str | None = None
-    OPENROUTER_API_KEY: str | None = None
-
-
-settings = Settings()
+from config import settings
 
 app = FastAPI()
 app.add_middleware(
