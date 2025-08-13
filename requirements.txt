@@ -23,6 +23,9 @@ crawl4ai
 openpyxl
 pyreadstat
 pyreadr
+pypdf
 aiosqlite
 supabase
+python-magic
 google-generativeai
+python-multipart
