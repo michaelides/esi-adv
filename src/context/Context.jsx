@@ -248,35 +248,13 @@ const ContextProvider = (props) => {
             } catch {}
         }
 
-        // Call streaming endpoint
+        // Call non-streaming endpoint as a temporary fix for the broken stream
         try {
-            let fullResponse = "";
-            const onDelta = (delta) => {
-                if (delta.type === 'delta' && delta.text) {
-                    fullResponse += delta.text;
-                    setMessages(prev => {
-                        const newMessages = [...prev];
-                        const lastMessage = newMessages[newMessages.length - 1];
-                        if (lastMessage && lastMessage.role === 'assistant') {
-                            lastMessage.content = marked.parse(fullResponse, { breaks: true });
-                        }
-                        return newMessages;
-                    });
-                } else if (delta.type === 'artifact') {
-                    addArtifact(delta.artifact);
-                } else if (delta.type === 'error') {
-                    console.error('Streaming error:', delta.message);
-                    handleApiResponse("Sorry, an error occurred while streaming the response.", sid2);
-                }
-            };
-
-            await streamChatWithHistory(cleanHistory, { verbosity, temperature }, file, onDelta);
-
-            // After stream is complete, finalize the message state
-            handleApiResponse(fullResponse, sid2);
-
+            const res = await runChatWithHistory(cleanHistory, { verbosity, temperature }, file);
+            let response = String(res?.text ?? '');
+            handleApiResponse(response, sid2);
         } catch (error) {
-            console.error('Error in onSent (streaming):', error);
+            console.error('Error in onSent:', error);
             const fallback = "Sorry, I can't complete that request. Please try again.";
             handleApiResponse(fallback, sid2);
         } finally {
