@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from agent import create_agent
+from google.auth.exceptions import DefaultCredentialsError
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from langchain.callbacks.base import BaseCallbackHandler, AsyncCallbackHandler
@@ -13,7 +14,7 @@ import pyreadstat
 import pyreadr
 from pypdf import PdfReader
 import io
-from vector_db import vector_db
+from vector_db import get_vector_db
 from config import settings
 
 app = FastAPI()
@@ -221,14 +222,20 @@ async def chat_stream(
             )
         
         # Create agent with the streaming LLM
-        agent_local = create_agent(
-            temperature=temperature,
-            model=model,
-            verbosity=verbosity,
-            llm=llm,
-            debug=debug,
-            file_content=file_content
-        )
+        try:
+            agent_local = create_agent(
+                temperature=temperature,
+                model=model,
+                verbosity=verbosity,
+                llm=llm,
+                debug=debug,
+                file_content=file_content
+            )
+        except (ValueError, DefaultCredentialsError) as e:
+            # Yield a specific configuration error and stop
+            yield f"data: {json.dumps({'type':'error','message': f'Server Configuration Error: {e}'})}\n\n"
+            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+            return
         
         payload = {"messages": messages_data}
         if file_content:
@@ -276,7 +283,7 @@ async def process_file(file: UploadFile):
             df = pd.read_csv(io.BytesIO(file_content))
             content_str += df.to_string()
         elif mime_type == 'application/pdf':
-            vector_db.add_pdf(file_content)
+            get_vector_db().add_pdf(file_content)
             content_str += f"PDF '{filename}' has been successfully indexed. You can now ask questions about it."
         elif filename and filename.endswith('.sav'):
             df, meta = pyreadstat.read_sav(io.BytesIO(file_content))

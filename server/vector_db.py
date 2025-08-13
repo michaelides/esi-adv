@@ -34,4 +34,10 @@ class VectorDB:
         return "\n".join([doc.page_content for doc in docs])
 
 # Make a single instance available
-vector_db = VectorDB()
+_vector_db_instance = None
+
+def get_vector_db():
+    global _vector_db_instance
+    if _vector_db_instance is None:
+        _vector_db_instance = VectorDB()
+    return _vector_db_instance

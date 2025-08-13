@@ -271,8 +271,8 @@ const ContextProvider = (props) => {
                     addArtifact(data.artifact);
                     break;
                 case 'error':
-                    const fallback = "Sorry, I can't complete that request. Please try again.";
-                    handleApiResponse(fallback, sid2);
+                    const errorMsg = data.message || "Sorry, I can't complete that request. Please try again.";
+                    handleApiResponse(errorMsg, sid2);
                     break;
                 case 'done':
                     setLoading(false);
