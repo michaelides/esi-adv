@@ -24,6 +24,7 @@ load_dotenv()
 # Import RAG tools
 import asyncio
 from rag import search_documents_tool, store_document_tool, get_document_tool
+from vector_db import vector_db
 
 # Import Google Generative AI types for GenerationConfig and SafetySettings
 from google.generativeai.types import GenerationConfig, HarmCategory, HarmBlockThreshold
@@ -130,7 +131,7 @@ class DebugLogHandler:
     def on_chain_error(self, *a, **k): pass
 
 
-def create_agent(temperature: float = 0.5, model: str = "gemini-2.5-flash", verbosity: int = 3, llm: Optional[Runnable] = None, debug: Optional[bool] = None) -> Runnable:
+def create_agent(temperature: float = 0.5, model: str = "gemini-2.5-flash", verbosity: int = 3, llm: Optional[Runnable] = None, debug: Optional[bool] = None, file_content: Optional[str] = None) -> Runnable:
     """Create and configure the React agent with tools.
     If `llm` is provided, it will be used instead of constructing a new one.
     """
@@ -188,6 +189,11 @@ def create_agent(temperature: float = 0.5, model: str = "gemini-2.5-flash", verb
         CustomSemanticScholarQueryRun(top_k_results=10),
         WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper()),
         PythonREPLTool(),
+        Tool(
+            name="search_vector_db",
+            description="Search the vector database for information from uploaded PDFs.",
+            func=vector_db.search,
+        ),
     ]
     
     # Add RAG tools
@@ -319,6 +325,9 @@ def create_agent(temperature: float = 0.5, model: str = "gemini-2.5-flash", verb
 
     # Load system prompt
     system_prompt = load_system_prompt()
+
+    if file_content:
+        system_prompt = f"The user has uploaded a file with the following content:\n\n{file_content}\n\n---\n\n{system_prompt}"
 
     # Adjust system prompt based on verbosity
     if verbosity == 1:

@@ -1,0 +1,47 @@
+.artifacts-panel {
+  width: 300px;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  right: 0;
+  background-color: #f0f0f0;
+  border-left: 1px solid #ccc;
+  padding: 20px;
+  box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.artifacts-panel h2 {
+  margin-top: 0;
+}
+
+.artifacts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.artifact-item {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 15px;
+}
+
+.artifact-item h3 {
+  margin-top: 0;
+  font-size: 1.2em;
+}
+
+.artifact-item pre {
+  background-color: #2d2d2d;
+  color: #f8f8f2;
+  padding: 10px;
+  border-radius: 5px;
+  overflow-x: auto;
+}
+
+.artifact-item code {
+  font-family: 'Courier New', Courier, monospace;
+}

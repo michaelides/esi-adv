@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
@@ -9,6 +9,14 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from langchain.callbacks.base import BaseCallbackHandler, AsyncCallbackHandler
 import asyncio
+import magic
+import pandas as pd
+import pyreadstat
+import pyreadr
+from pypdf import PdfReader
+import io
+from vector_db import vector_db
+
 #import os
 
 #load_dotenv("../.env")
@@ -42,28 +50,38 @@ class ChatRequest(BaseModel):
 
 
 @app.post("/chat")
-def chat(req: ChatRequest):
-    # Accept either full messages history or legacy user_input
-    messages = None
-    if isinstance(req.messages, list) and len(req.messages) > 0:
-        messages = req.messages
-    elif isinstance(req.user_input, str) and req.user_input.strip():
-        messages = [{"role": "user", "content": req.user_input.strip()}]
-    else:
-        return {"text": "Invalid request: provide 'messages' (list) or 'user_input' (string)."}
+async def chat(
+    messages: str = Form(...),
+    options: str = Form('{}'),
+    file: UploadFile = File(None)
+):
+    import json
+
+    messages_data = json.loads(messages)
+    options_data = json.loads(options)
 
     # Basic env checks for required keys depending on model type happen in create_agent
-    model = req.model or "gemini-2.5-flash"
-    temperature = req.temperature if req.temperature is not None else 0.5
-    verbosity = req.verbosity if req.verbosity is not None else 3
+    model = options_data.get("model") or "gemini-2.5-flash"
+    temperature = options_data.get("temperature", 0.5)
+    verbosity = options_data.get("verbosity", 3)
+    debug = options_data.get("debug", False)
+
+    file_content = None
+    if file:
+        file_content = await process_file(file)
 
     try:
-        agent = create_agent(temperature=temperature, model=model, verbosity=verbosity, debug=req.debug)
+        agent = create_agent(temperature=temperature, model=model, verbosity=verbosity, debug=debug, file_content=file_content)
     except Exception as e:
         return {"text": f"Server not configured: {e}"}
 
     # Build LangGraph prebuilt chat payload
-    payload = {"messages": messages}
+    payload = {"messages": messages_data}
+    if file_content:
+        # This part needs to be thought out: how does the agent use the file?
+        # For now, we'll just pass it in the payload.
+        payload["file_content"] = file_content
+
     result = agent.invoke(payload)
 
     # Extract clean assistant markdown text
@@ -155,18 +173,24 @@ async def thinking():
         return {"phrases": ["Thinking…"], "error": str(e)}
 
 @app.post("/chat/stream")
-async def chat_stream(req: ChatRequest):
-    # Normalize input like /chat
-    if isinstance(req.messages, list) and len(req.messages) > 0:
-        messages = req.messages
-    elif isinstance(req.user_input, str) and req.user_input.strip():
-        messages = [{"role": "user", "content": req.user_input.strip()}]
-    else:
-        messages = [{"role": "user", "content": "(empty)"}]
+async def chat_stream(
+    messages: str = Form(...),
+    options: str = Form('{}'),
+    file: UploadFile = File(None)
+):
+    import json
 
-    model = req.model or "gemini-2.5-flash"
-    temperature = req.temperature if req.temperature is not None else 0.5
-    verbosity = req.verbosity if req.verbosity is not None else 3
+    messages_data = json.loads(messages)
+    options_data = json.loads(options)
+
+    model = options_data.get("model") or "gemini-2.5-flash"
+    temperature = options_data.get("temperature", 0.5)
+    verbosity = options_data.get("verbosity", 3)
+    debug = options_data.get("debug", False)
+
+    file_content = None
+    if file:
+        file_content = await process_file(file)
 
     async def sse_generator():
         import json
@@ -195,10 +219,14 @@ async def chat_stream(req: ChatRequest):
             )
         
         # Create agent with streaming LLM
-        agent_local = create_agent(temperature=temperature, model=model, verbosity=verbosity, llm=llm, debug=req.debug)
+        agent_local = create_agent(temperature=temperature, model=model, verbosity=verbosity, llm=llm, debug=debug, file_content=file_content)
         
+        payload = {"messages": messages_data}
+        if file_content:
+            payload["file_content"] = file_content
+
         # Run agent in background
-        task = asyncio.create_task(asyncio.to_thread(agent_local.invoke, {"messages": messages}))
+        task = asyncio.create_task(asyncio.to_thread(agent_local.invoke, payload))
         
         # Stream tokens as they arrive
         while True:
@@ -206,7 +234,23 @@ async def chat_stream(req: ChatRequest):
                 token = await q.get()
                 if token is None:  # End of stream
                     break
-                yield f"data: {json.dumps({'type':'delta','text': token})}\n\n"
+
+                # Check for artifacts (code blocks, plots)
+                if "```python" in token:
+                    parts = token.split("```python")
+                    yield f"data: {json.dumps({'type':'delta','text': parts[0]})}\n\n"
+                    if len(parts) > 1:
+                        code_content = parts[1].split("```")[0]
+                        yield f"data: {json.dumps({'type':'artifact', 'artifact': {'type': 'code', 'content': code_content}})}\n\n"
+                elif "```json" in token:
+                    parts = token.split("```json")
+                    yield f"data: {json.dumps({'type':'delta','text': parts[0]})}\n\n"
+                    if len(parts) > 1:
+                        json_content = parts[1].split("```")[0]
+                        yield f"data: {json.dumps({'type':'artifact', 'artifact': {'type': 'plot', 'content': json_content}})}\n\n"
+                else:
+                    yield f"data: {json.dumps({'type':'delta','text': token})}\n\n"
+
             except Exception:
                 break
         
@@ -219,6 +263,35 @@ async def chat_stream(req: ChatRequest):
         yield "data: {\"type\": \"done\"}\n\n"
     
     return StreamingResponse(sse_generator(), media_type="text/event-stream")
+
+
+async def process_file(file: UploadFile):
+    file_content = await file.read()
+    mime_type = magic.from_buffer(file_content, mime=True)
+
+    filename = file.filename
+    content_str = f"File: {filename}\n"
+
+    try:
+        if mime_type == 'text/csv':
+            df = pd.read_csv(io.BytesIO(file_content))
+            content_str += df.to_string()
+        elif mime_type == 'application/pdf':
+            vector_db.add_pdf(file_content)
+            content_str += f"PDF '{filename}' has been successfully indexed. You can now ask questions about it."
+        elif filename and filename.endswith('.sav'):
+            df, meta = pyreadstat.read_sav(io.BytesIO(file_content))
+            content_str += df.to_string()
+        elif filename and (filename.endswith('.rdata') or filename.endswith('.rds')):
+            result = pyreadr.read_r(io.BytesIO(file_content))
+            for key, value in result.items():
+                content_str += f"Dataframe: {key}\n{value.to_string()}\n"
+        else:
+            content_str += "Unsupported file type."
+    except Exception as e:
+        content_str += f"Error processing file: {e}"
+
+    return content_str
 
 
 if __name__ == "__main__":

@@ -107,7 +107,8 @@ const RecentEntry = ({ s, isActive, onActivate }) => {
 const Sidebar = () => {
 
     const[extended, setExtended] = useState(true)
-    const { onSent, setRecentPrompt, newChat, sessions, activeSessionId, setActiveSession, openSettings, user, signInWithGoogle, signOut, showAllSessions, setShowAllSessions, isSettingsOpen } = useContext(Context)
+    const { onSent, setRecentPrompt, newChat, sessions, activeSessionId, setActiveSession, openSettings, user, signInWithGoogle, signOut, showAllSessions, setShowAllSessions, isSettingsOpen, uploadedFiles, removeUploadedFile } = useContext(Context)
+    const [filesOpen, setFilesOpen] = useState(true);
 
     const loadPrompt = async (prompt) => {
       setRecentPrompt(prompt)
@@ -136,6 +137,25 @@ const Sidebar = () => {
       </div>
 
         <div className="recent" ref={(el)=>{ /* optional ref */ }}>
+          <div className="recent-title" onClick={() => setFilesOpen(!filesOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Uploaded Files</span>
+            <img src={assets.history_icon} alt="Toggle files" style={{ transform: filesOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+          </div>
+          {filesOpen && (
+            <div className="section">
+              {uploadedFiles.map((file, index) => (
+                <div key={index} className="recent-entry">
+                  <img src={assets.gallery_icon} alt="file icon" />
+                  <p className="title">{file.name}</p>
+                  <span className="more-btn" onClick={() => removeUploadedFile(file.name)} title="Remove file">
+                    <img src={assets.x_icon} alt="remove" />
+                  </span>
+                </div>
+              ))}
+              {uploadedFiles.length === 0 && <p style={{textAlign: 'center', fontSize: '13px', opacity: 0.7, margin: '10px 0'}}>No files uploaded</p>}
+            </div>
+          )}
+
           <p className="recent-title">Recent</p>
           {(() => {
             const pinned = sessions.filter(x => x.pinned);

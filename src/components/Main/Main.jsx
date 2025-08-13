@@ -7,11 +7,25 @@ import ThinkingBlob from './ThinkingBlob'
 import { useRef, useCallback } from 'react'
 
 
-const Main = () => {
+const Main = ({ toggleArtifacts }) => {
 
-  const {onSent,setRecentPrompt,recentPrompt,showResult,loading,resultData,input,setInput,newChat,messages,editUserMessageAndRegenerate, redoAssistantAt, copyAssistantAt, shareAssistantAt, verifyAssistantAt, toast, thinkingPhrase, user, signOut, signInWithGoogle} = useContext(Context)
+  const {onSent,setRecentPrompt,recentPrompt,showResult,loading,resultData,input,setInput,newChat,messages,editUserMessageAndRegenerate, redoAssistantAt, copyAssistantAt, shareAssistantAt, verifyAssistantAt, toast, thinkingPhrase, user, signOut, signInWithGoogle, artifacts} = useContext(Context)
   const [menuOpen, setMenuOpen] = useState(false);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // For now, let's just log the file and prepare to send it.
+    // The actual sending will be handled in the updated onSent function.
+    console.log('Selected file:', file);
+
+    // We can enhance this to show a preview or file name in the UI.
+    // For now, we'll just trigger onSent with the file.
+    onSent(input, file);
+  };
 
   const userQueries = messages.filter(m => m.role === 'user').map(m => m.content);
 
@@ -63,10 +77,17 @@ const Main = () => {
       <div className="nav">
         <div onClick={()=>newChat()} className="gemini-logo">
           {/* brand moved to sidebar */}
-        </div>    
-        {!user ? (
-          <div
-            className="bottom-item recent-entry"
+        </div>
+        <div className="nav-right">
+          {artifacts.length > 0 && (
+            <button onClick={toggleArtifacts} className="artifacts-button">
+              <img src={assets.code_icon} alt="Artifacts" />
+              <span>Artifacts</span>
+            </button>
+          )}
+          {!user ? (
+            <div
+              className="bottom-item recent-entry"
             onClick={signInWithGoogle}
             title="Sign in with Google"
             style={{
@@ -82,7 +103,7 @@ const Main = () => {
             <i className="fa-regular fa-circle-user" style={{ fontSize: 16, opacity: 0.9 }} aria-hidden="true"></i>
             <span style={{ fontSize: 13 }}>Sign in</span>
           </div>
-        ) : (
+          ) : (
           <div style={{ position: 'relative' }}>
             <div
               onClick={() => setMenuOpen(v => !v)}
@@ -137,7 +158,8 @@ const Main = () => {
               </div>
             )}
           </div>
-        )}
+          )}
+        </div>
       </div>
       <div className="main-container">
 
@@ -208,13 +230,26 @@ const Main = () => {
               placeholder='Ask me anything about research...'
               onKeyDown={handleKeyDown}
             />
-
-                  <div>
-                      <img src={assets.gallery_icon} alt="" />
-                      <img src={assets.mic_icon} alt="" />
-                      {input?<img onClick={()=>onSent()} src={assets.send_icon} alt="" />:null}
-                  </div>
+            <div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+                accept=".csv,.spss,.sav,.rdata,.rds,.pdf"
+              />
+              <img
+                src={assets.gallery_icon}
+                alt="Upload file"
+                onClick={() => fileInputRef.current.click()}
+                style={{ cursor: 'pointer' }}
+              />
+              <img src={assets.mic_icon} alt="" />
+              {input || fileInputRef.current?.files?.length > 0 ? (
+                <img onClick={() => onSent(input, fileInputRef.current?.files[0])} src={assets.send_icon} alt="Send" />
+              ) : null}
             </div>
+          </div>
             <div className="bottom-info">
               <p>Made by George Michaelides for NBS-7091A and NBS-7095X. 
               ESI uses AI to help you navigate the dissertation process and can makde mistakes.</p>
