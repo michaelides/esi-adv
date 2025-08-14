@@ -251,6 +251,9 @@ const ContextProvider = (props) => {
         try {
             const response = await runChatWithHistory(cleanHistory, { verbosity, temperature }, file);
             const responseText = response.text || "Sorry, I can't complete that request. Please try again.";
+            if (response.artifacts && Array.isArray(response.artifacts)) {
+                response.artifacts.forEach(artifact => addArtifact(artifact));
+            }
             handleApiResponse(responseText, sid2);
         } catch (error) {
             console.error('Error in onSent (non-streaming):', error);
