@@ -39,5 +39,24 @@ _vector_db_instance = None
 def get_vector_db():
     global _vector_db_instance
     if _vector_db_instance is None:
-        _vector_db_instance = VectorDB()
+        if settings.GOOGLE_API_KEY:
+            try:
+                _vector_db_instance = VectorDB()
+            except Exception as e:
+                print(f"Failed to initialize VectorDB: {e}")
+                # Return a dummy object if initialization fails
+                class DummyVectorDB:
+                    def search(self, query):
+                        return f"Vector store initialization failed: {e}"
+                    def add_pdf(self, pdf_file):
+                        return f"Vector store initialization failed: {e}"
+                return DummyVectorDB()
+        else:
+            # Return a dummy object if no API key
+            class DummyVectorDB:
+                def search(self, query):
+                    return "Vector store is not configured. Please provide a GOOGLE_API_KEY."
+                def add_pdf(self, pdf_file):
+                    return "Vector store is not configured. Please provide a GOOGLE_API_KEY."
+            return DummyVectorDB()
     return _vector_db_instance

@@ -82,6 +82,13 @@ class CustomSemanticScholarQueryRun(SemanticScholarQueryRun):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_wrapper = CustomSemanticScholarAPIWrapper()
+        # Lazily initialize the wrapper to avoid issues on startup
+        self.api_wrapper = None
+
+    def _run(self, query: str) -> str:
+        """Run the tool."""
+        if self.api_wrapper is None:
+            self.api_wrapper = CustomSemanticScholarAPIWrapper()
+        return self.api_wrapper.run(query)
 
 

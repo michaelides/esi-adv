@@ -223,7 +223,28 @@ async def get_rag_manager() -> RAGManager:
     """Get the global RAG manager instance."""
     global _rag_manager
     if _rag_manager is None:
-        _rag_manager = RAGManager()
+        if os.getenv('GEMINI_API_KEY') and os.getenv('VITE_SUPABASE_URL') and os.getenv('VITE_SUPABASE_API'):
+            try:
+                _rag_manager = RAGManager()
+            except Exception as e:
+                logger.error(f"Failed to initialize RAGManager: {e}")
+                class DummyRAGManager:
+                    async def search_documents(self, query, limit=5):
+                        raise ConnectionError(f"RAG is not configured due to initialization error: {e}")
+                    async def store_document(self, content, metadata=None):
+                        raise ConnectionError(f"RAG is not configured due to initialization error: {e}")
+                    async def get_document_by_id(self, document_id):
+                        raise ConnectionError(f"RAG is not configured due to initialization error: {e}")
+                _rag_manager = DummyRAGManager()
+        else:
+            class DummyRAGManager:
+                async def search_documents(self, query, limit=5):
+                    raise ConnectionError("RAG is not configured. Please provide GEMINI_API_KEY, VITE_SUPABASE_URL, and VITE_SUPABASE_API.")
+                async def store_document(self, content, metadata=None):
+                    raise ConnectionError("RAG is not configured. Please provide GEMINI_API_KEY, VITE_SUPABASE_URL, and VITE_SUPABASE_API.")
+                async def get_document_by_id(self, document_id):
+                    raise ConnectionError("RAG is not configured. Please provide GEMINI_API_KEY, VITE_SUPABASE_URL, and VITE_SUPABASE_API.")
+            _rag_manager = DummyRAGManager()
     return _rag_manager
 
 # Tool functions for agent integration
