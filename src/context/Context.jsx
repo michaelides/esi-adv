@@ -248,53 +248,15 @@ const ContextProvider = (props) => {
             } catch {}
         }
 
-        // Call streaming endpoint
-        let fullResponse = "";
-        const onDelta = (data) => {
-            switch (data.type) {
-                case 'status':
-                    setThinkingPhrase(data.message);
-                    break;
-                case 'delta':
-                    fullResponse += data.text;
-                    const responseHtml = marked.parse(fullResponse, { breaks: true });
-                    setMessages(prev => {
-                        const out = [...prev];
-                        const idx = out.length - 1;
-                        if (idx >= 0 && out[idx].role === 'assistant') {
-                            out[idx] = { ...out[idx], content: responseHtml };
-                        }
-                        return out;
-                    });
-                    break;
-                case 'artifact':
-                    addArtifact(data.artifact);
-                    break;
-                case 'error':
-                    const errorMsg = data.message || "Sorry, I can't complete that request. Please try again.";
-                    handleApiResponse(errorMsg, sid2);
-                    break;
-                case 'done':
-                    setLoading(false);
-                    // Finalize the message in the session
-                    const finalHtml = marked.parse(fullResponse, { breaks: true });
-                    setSessions(prev => prev.map(s => s.id === sid2 ? ({ ...s, messages: [...nextMessages, { role: 'assistant', content: finalHtml }] }) : s));
-                    // Persist assistant message if authenticated
-                    if (user && sid2) {
-                        try {
-                            persistMessage(sid2, { role: 'assistant', content: finalHtml }, messages.length);
-                        } catch {}
-                    }
-                    break;
-            }
-        };
-
         try {
-            await streamChatWithHistory(cleanHistory, { verbosity, temperature }, file, onDelta);
+            const response = await runChatWithHistory(cleanHistory, { verbosity, temperature }, file);
+            const responseText = response.text || "Sorry, I can't complete that request. Please try again.";
+            handleApiResponse(responseText, sid2);
         } catch (error) {
-            console.error('Error in onSent (streaming):', error);
+            console.error('Error in onSent (non-streaming):', error);
             const fallback = "Sorry, I can't complete that request. Please try again.";
             handleApiResponse(fallback, sid2);
+        } finally {
             setLoading(false);
         }
     }
@@ -488,55 +450,15 @@ const ContextProvider = (props) => {
             }
         })();
 
-        // Call streaming endpoint
-        let fullResponse = "";
-        const onDelta = (data) => {
-            switch (data.type) {
-                case 'status':
-                    setThinkingPhrase(data.message);
-                    break;
-                case 'delta':
-                    fullResponse += data.text;
-                    const responseHtml = marked.parse(fullResponse, { breaks: true });
-                    setMessages(prev => {
-                        const out = [...prev];
-                        const idx = out.length - 1;
-                        if (idx >= 0 && out[idx].role === 'assistant') {
-                            out[idx] = { ...out[idx], content: responseHtml };
-                        }
-                        return out;
-                    });
-                    break;
-                case 'artifact':
-                    addArtifact(data.artifact);
-                    break;
-                case 'error':
-                    const fallback = "Sorry, I can't complete that request. Please try again.";
-                    handleApiResponse(fallback, sid, true, edited);
-                    break;
-                case 'done':
-                    setLoading(false);
-                    const finalHtml = marked.parse(fullResponse, { breaks: true });
-                    const finalMessages = [...edited, { role: 'assistant', content: finalHtml }];
-                    setSessions(prev => prev.map(x => x.id === sid ? { ...x, messages: finalMessages } : x));
-                    // Persist assistant message if authenticated
-                    if (user && sid) {
-                        try {
-                            // This is a re-generation, so we might need to delete old messages from this point
-                            // For now, just add the new one. A more robust solution would handle this.
-                            persistMessage(sid, { role: 'assistant', content: finalHtml }, edited.length);
-                        } catch {}
-                    }
-                    break;
-            }
-        };
-
         try {
-            await streamChatWithHistory(edited, { verbosity, temperature }, null, onDelta);
+            const response = await runChatWithHistory(edited, { verbosity, temperature }, null);
+            const responseText = response.text || "Sorry, I can't complete that request. Please try again.";
+            handleApiResponse(responseText, sid, true, edited);
         } catch (error) {
-            console.error('Error in editUserMessageAndRegenerate (streaming):', error);
+            console.error('Error in editUserMessageAndRegenerate (non-streaming):', error);
             const fallback = "Sorry, I can't complete that request. Please try again.";
             handleApiResponse(fallback, sid, true, edited);
+        } finally {
             setLoading(false);
         }
     };
@@ -617,54 +539,16 @@ const ContextProvider = (props) => {
             content: m.role === 'assistant' ? stripHtml(m.content) : (m.content || ''),
         }));
 
-        // Call streaming endpoint
-        let fullResponse = "";
-        const onDelta = (data) => {
-            switch (data.type) {
-                case 'status':
-                    setThinkingPhrase(data.message);
-                    break;
-                case 'delta':
-                    fullResponse += data.text;
-                    const responseHtml = marked.parse(fullResponse, { breaks: true });
-                    setMessages(prev => {
-                        const out = [...prev];
-                        const idx = out.length - 1;
-                        if (idx >= 0 && out[idx].role === 'assistant') {
-                            out[idx] = { ...out[idx], content: responseHtml };
-                        }
-                        return out;
-                    });
-                    break;
-                case 'artifact':
-                    addArtifact(data.artifact);
-                    break;
-                case 'error':
-                    const fallback = "Sorry, I can't complete that request. Please try again.";
-                    handleApiResponse(fallback, sid);
-                    break;
-                case 'done':
-                    setLoading(false);
-                    showToast('Regenerated', 'success');
-                    const finalHtml = marked.parse(fullResponse, { breaks: true });
-                    const finalMessages = [...truncated, { role: 'assistant', content: finalHtml }];
-                    setSessions(prev => prev.map(s => s.id === sid ? ({ ...s, messages: finalMessages }) : s));
-                    // Persist assistant message if authenticated
-                    if (user && sid) {
-                        try {
-                            persistMessage(sid, { role: 'assistant', content: finalHtml }, truncated.length);
-                        } catch {}
-                    }
-                    break;
-            }
-        };
-
         try {
-            await streamChatWithHistory(cleanHistory, { verbosity, temperature }, null, onDelta);
+            const response = await runChatWithHistory(cleanHistory, { verbosity, temperature }, null);
+            const responseText = response.text || "Sorry, I can't complete that request. Please try again.";
+            handleApiResponse(responseText, sid);
+            showToast('Regenerated', 'success');
         } catch (error) {
-            console.error('Error in redoAssistantAt (streaming):', error);
+            console.error('Error in redoAssistantAt (non-streaming):', error);
             const fallback = "Sorry, I can't complete that request. Please try again.";
             handleApiResponse(fallback, sid);
+        } finally {
             setLoading(false);
         }
 

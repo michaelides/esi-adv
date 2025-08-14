@@ -5,3 +5,7 @@ node_modules
 *.pdf
 source_data/*
 source_data/pdf/*
+
+# Python cache
+__pycache__/
+*.pyc
