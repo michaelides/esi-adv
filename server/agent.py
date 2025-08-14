@@ -131,7 +131,7 @@ class DebugLogHandler:
     def on_chain_error(self, *a, **k): pass
 
 
-def create_agent(temperature: float = 0.5, model: str = "gemini-2.5-flash", verbosity: int = 3, llm: Optional[Runnable] = None, debug: Optional[bool] = None, file_content: Optional[str] = None) -> Runnable:
+def create_agent(temperature: float = 0.5, model: str = "gemini-2.5-flash", verbosity: int = 3, llm: Optional[Runnable] = None, debug: Optional[bool] = None, file_content: Optional[str] = None, dataframe: Optional[Any] = None) -> Runnable:
     """Create and configure the React agent with tools.
     If `llm` is provided, it will be used instead of constructing a new one.
     """
@@ -184,11 +184,15 @@ def create_agent(temperature: float = 0.5, model: str = "gemini-2.5-flash", verb
     is_debug_enabled = (debug is True) or env_debug
     
     # Create tools
+    python_repl_tool = PythonREPLTool()
+    if dataframe is not None:
+        python_repl_tool.globals = {"df": dataframe}
+
     tools = [
         create_tavily_tool(),
         CustomSemanticScholarQueryRun(top_k_results=10),
         WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper()),
-        PythonREPLTool(),
+        python_repl_tool,
         Tool(
             name="search_vector_db",
             description="Search the vector database for information from uploaded PDFs.",

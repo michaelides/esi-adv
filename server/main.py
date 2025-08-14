@@ -54,13 +54,15 @@ async def chat(
     debug = options_data.get("debug", False)
 
     file_content = None
+    artifacts = []
+    dataframe = None
     if file:
-        file_content = await process_file(file)
+        file_content, artifacts, dataframe = await process_file(file)
 
     try:
-        agent = create_agent(temperature=temperature, model=model, verbosity=verbosity, debug=debug, file_content=file_content)
+        agent = create_agent(temperature=temperature, model=model, verbosity=verbosity, debug=debug, file_content=file_content, dataframe=dataframe)
     except Exception as e:
-        return {"text": f"Server not configured: {e}"}
+        return {"text": f"Server not configured: {e}", "artifacts": artifacts}
 
     # Build LangGraph prebuilt chat payload
     payload = {"messages": messages_data}
@@ -74,9 +76,9 @@ async def chat(
     # Extract clean assistant markdown text
     from typing import Any
     try:
-        from langchain_core.messages import AIMessage, ToolMessage, HumanMessage  # type: ignore
+        from langchain_core.messages import AIMessage, ToolMessage, HumanMessage
     except Exception:  # Fallback if types unavailable
-        AIMessage = ToolMessage = HumanMessage = tuple()  # type: ignore
+        AIMessage = ToolMessage = HumanMessage = tuple()
 
     def extract_markdown(r: Any) -> str:
         # Prefer traversing a message list
@@ -115,7 +117,7 @@ async def chat(
         return str(r)
 
     text = extract_markdown(result)
-    return {"text": text}
+    return {"text": text, "artifacts": artifacts}
 
 
 class SSEQueueHandler(AsyncCallbackHandler):
@@ -188,11 +190,16 @@ async def chat_stream(
     debug = options_data.get("debug", False)
 
     file_content = None
+    artifacts = []
+    dataframe = None
     if file:
-        file_content = await process_file(file)
+        file_content, artifacts, dataframe = await process_file(file)
 
     async def sse_generator():
         import json
+
+        if artifacts:
+            yield f"data: {json.dumps({'type': 'artifacts', 'artifacts': artifacts})}\n\n"
         
         q: asyncio.Queue[str | None] = asyncio.Queue()
         handler = SSEQueueHandler(q)
@@ -223,7 +230,8 @@ async def chat_stream(
                 verbosity=verbosity,
                 llm=llm,
                 debug=debug,
-                file_content=file_content
+                file_content=file_content,
+                dataframe=dataframe
             )
         except (ValueError, DefaultCredentialsError) as e:
             # Yield a specific configuration error and stop
@@ -273,27 +281,65 @@ async def process_file(file: UploadFile):
 
     filename = file.filename
     content_str = f"File: {filename}\n"
+    artifacts = []
+    dataframe = None
 
     try:
         if mime_type == 'text/csv':
             df = pd.read_csv(io.BytesIO(file_content))
-            content_str += df.to_string()
+            buffer = io.StringIO()
+            df.info(buf=buffer)
+            content_str += f"CSV file loaded as a dataframe with the following info:\n{buffer.getvalue()}\n\nFirst 5 rows:\n{df.head().to_string()}"
+            artifacts.append({"type": "dataframe", "content": df.to_html()})
+            dataframe = df
         elif mime_type == 'application/pdf':
-            get_vector_db().add_pdf(file_content)
-            content_str += f"PDF '{filename}' has been successfully indexed. You can now ask questions about it."
+            import base64
+            try:
+                reader = PdfReader(io.BytesIO(file_content))
+                text = ""
+                for page in reader.pages:
+                    text += page.extract_text()
+                get_vector_db().add_pdf(file_content)
+                content_str += f"PDF '{filename}' has been successfully indexed. You can now ask questions about it."
+
+                pdf_data_url = f"data:application/pdf;base64,{base64.b64encode(file_content).decode('utf-8')}"
+                artifacts.append({"type": "pdf", "content": pdf_data_url, "filename": filename})
+                artifacts.append({"type": "document", "filename": filename, "content": text})
+            except Exception as e:
+                content_str += f"Error processing PDF file: {e}"
+                artifacts.append({"type": "error", "content": f"Error processing PDF {filename}: {e}"})
         elif filename and filename.endswith('.sav'):
             df, meta = pyreadstat.read_sav(io.BytesIO(file_content))
-            content_str += df.to_string()
+            buffer = io.StringIO()
+            df.info(buf=buffer)
+            content_str += f"SAV file loaded as a dataframe with the following info:\n{buffer.getvalue()}\n\nFirst 5 rows:\n{df.head().to_string()}"
+            artifacts.append({"type": "dataframe", "content": df.to_html()})
+            dataframe = df
         elif filename and (filename.endswith('.rdata') or filename.endswith('.rds')):
-            result = pyreadr.read_r(io.BytesIO(file_content))
-            for key, value in result.items():
-                content_str += f"Dataframe: {key}\n{value.to_string()}\n"
+            try:
+                result = pyreadr.read_r(io.BytesIO(file_content))
+                if result:
+                    first_key = list(result.keys())[0]
+                    df = result[first_key]
+                    buffer = io.StringIO()
+                    df.info(buf=buffer)
+                    content_str += f"Rdata file loaded. Dataframe '{first_key}' has the following info:\n{buffer.getvalue()}\n\nFirst 5 rows:\n{df.head().to_string()}"
+                    artifacts.append({"type": "dataframe", "label": first_key, "content": df.to_html()})
+                    dataframe = df
+                else:
+                    content_str += "Could not read any dataframes from the Rdata file."
+                    artifacts.append({"type": "error", "content": "Could not read any dataframes from the Rdata file."})
+            except Exception as e:
+                content_str += f"Error processing Rdata file: {e}"
+                artifacts.append({"type": "error", "content": f"Error processing Rdata {filename}: {e}"})
         else:
             content_str += "Unsupported file type."
+            artifacts.append({"type": "error", "content": f"Unsupported file type: {mime_type}"})
     except Exception as e:
         content_str += f"Error processing file: {e}"
+        artifacts.append({"type": "error", "content": f"Error processing {filename}: {e}"})
 
-    return content_str
+    return content_str, artifacts, dataframe
 
 
 if __name__ == "__main__":
