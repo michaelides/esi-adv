@@ -346,7 +346,9 @@ def create_agent(temperature: float = 0.5, model: str = "gemini-2.5-flash", verb
     # Build proper chat prompt with system + conversation placeholder
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
-        MessagesPlaceholder(variable_name="messages"),
+        MessagesPlaceholder(variable_name="chat_history", optional=True),
+        ("user", "{input}"),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),
     ])
 
     # Create the React agent

@@ -2,7 +2,7 @@ from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from agent import create_agent
+from agent import create_agent, get_captured_figures, clear_captured_figures
 from google.auth.exceptions import DefaultCredentialsError
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
@@ -64,14 +64,36 @@ async def chat(
     except Exception as e:
         return {"text": f"Server not configured: {e}", "artifacts": artifacts}
 
-    # Build LangGraph prebuilt chat payload
-    payload = {"messages": messages_data}
+    # Separate history and input for the agent
+    if messages_data:
+        chat_history = messages_data[:-1]
+        input_text = messages_data[-1].get("content", "")
+    else:
+        chat_history = []
+        input_text = ""
+
+    payload = {"input": input_text, "chat_history": chat_history}
+
     if file_content:
         # This part needs to be thought out: how does the agent use the file?
         # For now, we'll just pass it in the payload.
         payload["file_content"] = file_content
 
     result = agent.invoke(payload)
+
+    # Get captured figures from the agent's execution
+    captured_figures = get_captured_figures()
+    if captured_figures:
+        for fig_json in captured_figures:
+            try:
+                # The figure is a JSON string, so parse it
+                artifacts.append({"type": "plot", "content": json.loads(fig_json)})
+            except json.JSONDecodeError:
+                # Handle cases where the string is not valid JSON
+                print(f"Warning: Could not decode captured figure JSON: {fig_json}")
+
+    # Clear the global list of figures for the next request
+    clear_captured_figures()
 
     # Extract clean assistant markdown text
     from typing import Any
