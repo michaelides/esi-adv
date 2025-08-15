@@ -10,6 +10,7 @@ from langchain_tavily import TavilySearch
 from langchain_community.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
 from langchain_experimental.tools.python.tool import PythonREPLTool
+from langchain.tools import BaseTool
 from crawler import SimpleCrawl4AITool, AdvancedCrawl4AITool, SmartExtractionTool, BatchCrawl4AITool
 from custom_tools import CustomSemanticScholarQueryRun
 import json
@@ -48,6 +49,42 @@ def clear_captured_figures():
     count = len(_captured_figures)
     _captured_figures.clear()
     print(f"Cleared {count} captured figures")
+
+
+class PythonPlottingTool(BaseTool):
+    """A wrapper around the PythonREPLTool that provides feedback on plot generation."""
+    name: str = "python_interpreter"
+    description: str = (
+        "Use this tool to execute python code. It is a full Python REPL. "
+        "Use it for any calculations, data analysis, or to generate plots with plotly. "
+        "The code to generate a plot should end with `fig.show()`. "
+        "If a plot is generated, it will be displayed in the artifacts panel."
+    )
+    globals: Optional[Dict[str, Any]] = None
+
+    def _run(self, query: str) -> str:
+        """Execute the python code and return the result."""
+        # Clear any figures from previous runs
+        clear_captured_figures()
+
+        repl_tool = PythonREPLTool(globals=self.globals)
+
+        # Execute the code
+        result = repl_tool.run(query)
+
+        # Check if a figure was captured
+        captured_figures = get_captured_figures()
+
+        if captured_figures:
+            # A plot was created, return a success message
+            return "Plot generated successfully. It is now available in the artifacts panel."
+        else:
+            # No plot, return the original result from the REPL
+            return result
+
+    async def _arun(self, query: str) -> str:
+        # Asynchronous execution is not strictly necessary here but good practice
+        return self._run(query)
 
 def load_system_prompt() -> str:
     """Load the system prompt from the esi_agent_instruction.md file."""
@@ -184,15 +221,15 @@ def create_agent(temperature: float = 0.5, model: str = "gemini-2.5-flash", verb
     is_debug_enabled = (debug is True) or env_debug
     
     # Create tools
-    python_repl_tool = PythonREPLTool()
+    python_tool = PythonPlottingTool()
     if dataframe is not None:
-        python_repl_tool.globals = {"df": dataframe}
+        python_tool.globals = {"df": dataframe}
 
     tools = [
         create_tavily_tool(),
         CustomSemanticScholarQueryRun(top_k_results=10),
         WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper()),
-        python_repl_tool,
+        python_tool,
         Tool(
             name="search_vector_db",
             description="Search the vector database for information from uploaded PDFs.",
