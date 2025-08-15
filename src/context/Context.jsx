@@ -149,6 +149,7 @@ const ContextProvider = (props) => {
         setRecentPrompt('');
         setResultData('');
         setMessages([]);
+        setArtifacts([]);
     }
     
 
@@ -199,49 +200,59 @@ const ContextProvider = (props) => {
         })();
         setRecentPrompt(text)
 
-        // Append user turn and assistant placeholder atomically to ensure order
         const userTurn = { role: 'user', content: text };
         const nextMessages = [...messages, userTurn];
+        const historyForApi = nextMessages.map(m => ({
+            role: m.role,
+            content: m.role === 'assistant' ? (m.content.replace(/<[^>]*>?/gm, '')) : m.content,
+        }));
+
         setMessages(prev => [...prev, userTurn, { role: 'assistant', content: '' }]);
 
-        // Call backend with full history
-        // Ensure an active session exists without resetting UI
         let sid = activeSessionId;
         if (!sid) {
             sid = (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2));
             setActiveSessionId(sid);
-            // create local session immediately so UI has an id
-            setSessions(prev => [{ id: sid, title: text.slice(0,60) || 'New chat', messages: [], createdAt: Date.now() }, ...prev]);
-            // persist in background if authenticated
+            const newSession = {
+                id: sid,
+                title: text.slice(0, 60) || 'New chat',
+                messages: [...nextMessages, { role: 'assistant', content: '' }],
+                createdAt: Date.now()
+            };
+            setSessions(prev => [newSession, ...prev]);
+
             if (user) {
-                try { await supabase.from('chat_sessions').insert({ id: sid, user_id: user.id, title: text.slice(0,60) || 'New chat' }); } catch {}
+                try {
+                    await supabase.from('chat_sessions').insert({ id: sid, user_id: user.id, title: newSession.title });
+                } catch {}
             }
-        }
-
-        // Update the active session with the user turn (local state)
-        if (sid) {
-            setSessions(prev => prev.map(s => s.id === sid ? ({
+        } else {
+            setSessions(prev => prev.map(s => s.id === sid ? {
                 ...s,
-                messages: nextMessages,
-                title: (!s.manualTitle && (!s.title || s.title === 'New chat')) ? (text.slice(0,60) || s.title) : s.title,
-            }) : s));
+                messages: [...nextMessages, { role: 'assistant', content: '' }],
+                title: (!s.manualTitle && (!s.title || s.title === 'New chat')) ? (text.slice(0, 60) || s.title) : s.title,
+            } : s));
         }
 
-        // After ensuring placeholder in UI state, sync session state with both new entries
-        const sid2 = sid;
-        if (sid2) setSessions(prev => prev.map(s => s.id === sid2 ? ({ ...s, messages: [...(s.messages||[]), userTurn, { role: 'assistant', content: '' }] }) : s));
+        if (user && sid) {
+            try {
+                await persistMessage(sid, userTurn, messages.length);
+                await supabase.from('chat_sessions').update({ updated_at: new Date().toISOString() }).eq('id', sid).eq('user_id', user.id);
+                const live = sessions.find(x => x.id === sid) || {};
+                if (!live.manualTitle && (!live.title || live.title === 'New chat')) {
+                    await persistSessionTitleIfNeeded(sid, text);
+                }
+            } catch {}
+        }
 
-        // Build a clean, text-only history for the backend (strip any HTML in prior assistant msgs)
-        const stripHtml = (html) => {
-            if (typeof html !== 'string') return '';
-            const tmp = document.createElement('div');
-            tmp.innerHTML = html;
-            return (tmp.textContent || tmp.innerText || '').trim();
-        };
-        const cleanHistory = nextMessages.map(m => ({
-            role: m.role,
-            content: m.role === 'assistant' ? stripHtml(m.content) : (m.content || ''),
-        }));
+        const assistantMessageIndex = messages.length + 1;
+        try {
+            const response = await runChatWithHistory(historyForApi, { verbosity, temperature }, file);
+            const responseText = response.text || "Sorry, I can't complete that request. Please try again.";
+            if (response.artifacts && Array.isArray(response.artifacts)) {
+                response.artifacts.forEach(artifact => addArtifact(artifact));
+            }
+            handleApiResponse(responseText, sid, false, null, assistantMessageIndex);
 
         // Persist user turn immediately if authenticated
         if (user && sid2) {
