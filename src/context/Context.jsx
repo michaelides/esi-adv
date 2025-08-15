@@ -116,21 +116,28 @@ const ContextProvider = (props) => {
         showToast._t = setTimeout(() => setToast(null), ms);
     };
 
-    const handleApiResponse = (response, sid, isEdit = false, editedHistory = null) => {
+    const handleApiResponse = (response, sid, isEdit = false, editedHistory = null, index) => {
         const responseHtml = marked.parse(response || '', { breaks: true });
+        const assistantTurn = { role: 'assistant', content: responseHtml };
 
         if (isEdit) {
-            const finalMessages = [...editedHistory, { role: 'assistant', content: responseHtml }];
+            const finalMessages = [...editedHistory, assistantTurn];
             setMessages(finalMessages);
             setSessions(prev => prev.map(x => x.id === sid ? { ...x, messages: finalMessages } : x));
+            if (user && sid && index !== undefined) {
+                try { persistMessage(sid, assistantTurn, index); } catch {}
+            }
         } else {
             setMessages(prev => {
                 const out = [...prev];
                 const idx = out.length - 1;
-                if (idx >= 0 && out[idx].role === 'assistant') out[idx] = { ...out[idx], content: responseHtml };
+                if (idx >= 0 && out[idx].role === 'assistant') out[idx] = assistantTurn;
                 return out;
             });
-            setSessions(prev => prev.map(s => s.id === sid ? ({ ...s, messages: [...s.messages.slice(0, -1), { role: 'assistant', content: responseHtml }] }) : s));
+            setSessions(prev => prev.map(s => s.id === sid ? ({ ...s, messages: [...s.messages.slice(0, -1), assistantTurn] }) : s));
+            if (user && sid && index !== undefined) {
+                try { persistMessage(sid, assistantTurn, index); } catch {}
+            }
         }
     };
 
@@ -248,17 +255,18 @@ const ContextProvider = (props) => {
             } catch {}
         }
 
+        const assistantMessageIndex = messages.length + 1;
         try {
             const response = await runChatWithHistory(cleanHistory, { verbosity, temperature }, file);
             const responseText = response.text || "Sorry, I can't complete that request. Please try again.";
             if (response.artifacts && Array.isArray(response.artifacts)) {
                 response.artifacts.forEach(artifact => addArtifact(artifact));
             }
-            handleApiResponse(responseText, sid2);
+            handleApiResponse(responseText, sid2, false, null, assistantMessageIndex);
         } catch (error) {
             console.error('Error in onSent (non-streaming):', error);
             const fallback = "Sorry, I can't complete that request. Please try again.";
-            handleApiResponse(fallback, sid2);
+            handleApiResponse(fallback, sid2, false, null, assistantMessageIndex);
         } finally {
             setLoading(false);
         }
@@ -453,14 +461,15 @@ const ContextProvider = (props) => {
             }
         })();
 
+        const assistantMessageIndex = edited.length;
         try {
             const response = await runChatWithHistory(edited, { verbosity, temperature }, null);
             const responseText = response.text || "Sorry, I can't complete that request. Please try again.";
-            handleApiResponse(responseText, sid, true, edited);
+            handleApiResponse(responseText, sid, true, edited, assistantMessageIndex);
         } catch (error) {
             console.error('Error in editUserMessageAndRegenerate (non-streaming):', error);
             const fallback = "Sorry, I can't complete that request. Please try again.";
-            handleApiResponse(fallback, sid, true, edited);
+            handleApiResponse(fallback, sid, true, edited, assistantMessageIndex);
         } finally {
             setLoading(false);
         }
@@ -542,15 +551,16 @@ const ContextProvider = (props) => {
             content: m.role === 'assistant' ? stripHtml(m.content) : (m.content || ''),
         }));
 
+        const assistantMessageIndex = truncated.length;
         try {
             const response = await runChatWithHistory(cleanHistory, { verbosity, temperature }, null);
             const responseText = response.text || "Sorry, I can't complete that request. Please try again.";
-            handleApiResponse(responseText, sid);
+            handleApiResponse(responseText, sid, false, null, assistantMessageIndex);
             showToast('Regenerated', 'success');
         } catch (error) {
             console.error('Error in redoAssistantAt (non-streaming):', error);
             const fallback = "Sorry, I can't complete that request. Please try again.";
-            handleApiResponse(fallback, sid);
+            handleApiResponse(fallback, sid, false, null, assistantMessageIndex);
         } finally {
             setLoading(false);
         }
