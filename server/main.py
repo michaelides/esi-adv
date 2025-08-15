@@ -90,30 +90,39 @@ async def chat(
 
         if isinstance(msgs, list):
             last_text = None
-            for m in msgs:
-                if isinstance(m, AIMessage):
-                    if isinstance(m.content, str) and m.content.strip():
-                        last_text = m.content.strip()
-                elif isinstance(m, dict):
-                    role = m.get("role") or m.get("type")
-                    content = m.get("content") or m.get("text")
-                    if role in ("assistant", "ai") and isinstance(content, str) and content.strip():
-                        last_text = content.strip()
-                # Ignore HumanMessage and ToolMessage for user output
-            if last_text:
-                return last_text
+            for m in reversed(msgs):  # Start from the last message
+                is_ai_message = isinstance(m, AIMessage) or \
+                                (isinstance(m, dict) and m.get("role") in ("assistant", "ai"))
 
-        # Direct AIMessage
-        if isinstance(r, AIMessage) and isinstance(r.content, str) and r.content.strip():
-            return r.content.strip()
+                if is_ai_message:
+                    content = m.content if isinstance(m, AIMessage) else m.get("content")
 
-        # Dict shapes with content/output
+                    if isinstance(content, list):
+                        # Join list content into a single string, filtering out empty parts
+                        joined_content = "\n".join(str(c).strip() for c in content if str(c).strip()).strip()
+                        if joined_content:
+                            return joined_content  # Return the first valid AI message found
+                    elif isinstance(content, str) and content.strip():
+                        return content.strip()  # Return the first valid AI message found
+
+            # If no AI message with content is found in the list, fall through
+
+        # Handle direct AIMessage response
+        if isinstance(r, AIMessage):
+            content = r.content
+            if isinstance(content, list):
+                return "\n".join(str(c).strip() for c in content if str(c).strip()).strip()
+            elif isinstance(content, str) and content.strip():
+                return content.strip()
+
+        # Handle dict shapes with direct output/content
         if isinstance(r, dict):
             for k in ("output", "content", "text"):
                 v = r.get(k)
                 if isinstance(v, str) and v.strip():
                     return v.strip()
 
+        # Fallback: convert the entire raw response to a string
         return str(r)
 
     text = extract_markdown(result)
