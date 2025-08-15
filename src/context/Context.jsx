@@ -253,31 +253,10 @@ const ContextProvider = (props) => {
                 response.artifacts.forEach(artifact => addArtifact(artifact));
             }
             handleApiResponse(responseText, sid, false, null, assistantMessageIndex);
-
-        // Persist user turn immediately if authenticated
-        if (user && sid2) {
-            try { await persistMessage(sid2, userTurn, (messages.length)); } catch {}
-            try { await supabase.from('chat_sessions').update({ updated_at: new Date().toISOString() }).eq('id', sid2).eq('user_id', user.id); } catch {}
-            try {
-                const live = (sessions.find(x => x.id === sid2) || {});
-                if (!live?.manualTitle && (!live?.title || live?.title === 'New chat')) {
-                    await persistSessionTitleIfNeeded(sid2, text);
-                }
-            } catch {}
-        }
-
-        const assistantMessageIndex = messages.length + 1;
-        try {
-            const response = await runChatWithHistory(cleanHistory, { verbosity, temperature }, file);
-            const responseText = response.text || "Sorry, I can't complete that request. Please try again.";
-            if (response.artifacts && Array.isArray(response.artifacts)) {
-                response.artifacts.forEach(artifact => addArtifact(artifact));
-            }
-            handleApiResponse(responseText, sid2, false, null, assistantMessageIndex);
         } catch (error) {
             console.error('Error in onSent (non-streaming):', error);
             const fallback = "Sorry, I can't complete that request. Please try again.";
-            handleApiResponse(fallback, sid2, false, null, assistantMessageIndex);
+            handleApiResponse(fallback, sid, false, null, assistantMessageIndex);
         } finally {
             setLoading(false);
         }
