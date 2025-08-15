@@ -71,14 +71,26 @@ async def chat(
     else:
         chat_history = []
         input_text = ""
-
-    payload = {"input": input_text, "chat_history": chat_history}
-
+    
+    # Build messages array for the agent
+    messages = []
+    
+    # Add system prompt
+    messages.append({"role": "system", "content": agent.system_prompt})
+    
+    # Add chat history if available
+    if chat_history:
+        messages.extend(chat_history)
+    
+    # Add the current user input
+    messages.append({"role": "user", "content": input_text})
+    
+    # Add file content to the user message if available
     if file_content:
-        # This part needs to be thought out: how does the agent use the file?
-        # For now, we'll just pass it in the payload.
-        payload["file_content"] = file_content
-
+        messages[-1]["content"] = f"{input_text}\n\nFile content:\n{file_content}"
+    
+    payload = {"messages": messages}
+    
     result = agent.invoke(payload)
 
     # Get captured figures from the agent's execution
@@ -270,13 +282,36 @@ async def chat_stream(
             yield f"data: {json.dumps({'type': 'done'})}\n\n"
             return
         
-        payload = {"messages": messages_data}
+        # Separate history and input for the agent
+        if messages_data:
+            chat_history = messages_data[:-1]
+            input_text = messages_data[-1].get("content", "")
+        else:
+            chat_history = []
+            input_text = ""
+        
+        # Build messages array for the agent
+        messages = []
+        
+        # Add system prompt
+        messages.append({"role": "system", "content": agent_local.system_prompt})
+        
+        # Add chat history if available
+        if chat_history:
+            messages.extend(chat_history)
+        
+        # Add the current user input
+        messages.append({"role": "user", "content": input_text})
+        
+        # Add file content to the user message if available
         if file_content:
-            payload["file_content"] = file_content
-
+            messages[-1]["content"] = f"{input_text}\n\nFile content:\n{file_content}"
+        
+        payload = {"messages": messages}
+        
         # Run agent in background, passing the handler in the config
         config = {"callbacks": [handler]}
-        task = asyncio.create_task(asyncio.to_thread(agent_local.invoke, payload, config))
+        task = asyncio.create_task(asyncio.to_thread(lambda: agent_local.invoke(payload, config=config)))
         
         # Stream events as they arrive
         while not task.done() or not q.empty():

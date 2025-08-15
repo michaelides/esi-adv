@@ -329,10 +329,10 @@ def create_agent(temperature: float = 0.5, model: str = "gemini-2.5-flash", verb
 
     # Load system prompt
     system_prompt = load_system_prompt()
-
+    
     if file_content:
         system_prompt = f"The user has uploaded a file with the following content:\n\n{file_content}\n\n---\n\n{system_prompt}"
-
+    
     # Adjust system prompt based on verbosity
     if verbosity == 1:
         system_prompt += "\n\nYour responses should be extremely concise and laconic. Get straight to the point."
@@ -343,21 +343,15 @@ def create_agent(temperature: float = 0.5, model: str = "gemini-2.5-flash", verb
     elif verbosity == 5:
         system_prompt += "\n\nYour responses should be extremely verbose, comprehensive, and elaborate on all points."
     
-    # Build proper chat prompt with system + conversation placeholder
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        MessagesPlaceholder(variable_name="chat_history", optional=True),
-        ("user", "{input}"),
-        MessagesPlaceholder(variable_name="agent_scratchpad"),
-    ])
-
     # Create the React agent
     agent = create_react_agent(
         llm,
         tools=tools,
-        prompt=prompt,
         debug=is_debug_enabled,
     )
+    
+    # Add system_prompt to the agent for use in main.py
+    agent.system_prompt = system_prompt
 
     return agent
 

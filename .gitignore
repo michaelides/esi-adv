@@ -9,3 +9,5 @@ source_data/pdf/*
 # Python cache
 __pycache__/
 *.pyc
+server/__pycache__/
+server/*.pyc
