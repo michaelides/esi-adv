@@ -16,7 +16,7 @@
 
 /* Dark mode sidebar */
 [data-theme="dark"] .sidebar{
-    background-color: #272a30 !important; /* neutral dark, no blue tint */
+    background-color: #191823 !important; /* neutral dark, no blue tint */
     color: #ffffff !important;            /* keep text white */
 }
 
@@ -52,7 +52,7 @@
 }
 
 .sidebar.collapsed{
-    width: 70px;
+    width: 60px;
 }
 
 .sidebar.collapsed:hover{
@@ -80,7 +80,7 @@
     padding: 10px 12px;                 /* match recent-entry */
     background-color: transparent;      /* follow bottom buttons */
     border-radius: 50px;                /* same pill shape */
-    font-size: 14px;
+    font-size: 12px;
     color: inherit;                     /* follow sidebar text color */
     cursor: pointer;
 }
@@ -192,7 +192,7 @@
 }
 
 .sidebar .recent-title{
-    margin-top: 30px;
+    margin-top: 10px;
     margin-bottom: 10px;   
 }
 
@@ -208,11 +208,11 @@
     align-items: center;
     gap: 10px;
     padding: 10px 12px;
-    border-radius: 50px;
+    border-radius: 30px;
     color: #282828;
     cursor: pointer;
     position: relative;
-    font-size: 14px;
+    font-size: 12px;
 }
 .sidebar .recent-entry .pin-badge{
     color: #f59e0b; /* amber */
@@ -228,7 +228,7 @@
 .sidebar .recent-entry .rename-input{
     flex: 1 1 auto;
     min-width: 0;
-    font-size: 14px;
+    font-size: 12px;
     padding: 6px 8px;
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -268,8 +268,8 @@
     white-space: nowrap;
 }
 .sidebar .recent-entry .menu .item svg{
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     opacity: 0.9;
 }
 .sidebar .recent-entry .menu .item:hover{ background: rgba(0,0,0,0.06); }
@@ -320,14 +320,14 @@
 .sidebar-toggle {
     position: absolute;
     top: 25px;
-    right: 15px;
+    left: 15px;
     z-index: 10;
 }
 
 .sidebar .new-chat {
     position: absolute;
     top: 70px;
-    left: 15px;
+    left: 14px;
 }
 
 
