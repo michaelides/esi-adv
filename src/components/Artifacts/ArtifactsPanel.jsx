@@ -1,11 +1,34 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useRef, useCallback } from 'react';
 import { Context } from '../../context/Context';
 import './ArtifactsPanel.css';
 
-const ArtifactsPanel = () => {
+const ArtifactsPanel = ({ isVisible, onClose }) => {
   const { artifacts, darkMode } = useContext(Context);
+  const [width, setWidth] = useState(400); // Initial width
+  const panelRef = useRef(null);
 
-  if (artifacts.length === 0) {
+  const onMouseDown = useCallback((e) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = width;
+
+    const onMouseMove = (moveEvent) => {
+      const newWidth = startWidth - (moveEvent.clientX - startX);
+      if (newWidth > 300 && newWidth < window.innerWidth - 100) { // Min and max width
+        setWidth(newWidth);
+      }
+    };
+
+    const onMouseUp = () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  }, [width]);
+
+  if (!isVisible || artifacts.length === 0) {
     return null;
   }
 
@@ -59,8 +82,16 @@ const ArtifactsPanel = () => {
   };
 
   return (
-    <div className={`artifacts-panel ${darkMode ? 'dark' : ''}`}>
-      <h2>Artifacts</h2>
+    <div
+      ref={panelRef}
+      className={`artifacts-panel ${darkMode ? 'dark' : ''}`}
+      style={{ width: `${width}px` }}
+    >
+      <div className="resize-handle" onMouseDown={onMouseDown} />
+      <div className="panel-header">
+        <h2>Artifacts</h2>
+        <button onClick={onClose} className="close-btn">&times;</button>
+      </div>
       <div className="artifacts-list">
         {artifacts.map((artifact, index) => renderArtifact(artifact, index))}
       </div>

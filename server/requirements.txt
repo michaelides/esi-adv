@@ -37,3 +37,4 @@ python-magic
 markdown
 markdownify
 pycryptodome
+trio
