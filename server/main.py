@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -17,6 +18,7 @@ import io
 from vector_db import get_vector_db
 from config import settings
 
+agent_lock = asyncio.Lock()
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -91,10 +93,11 @@ async def chat(
     
     payload = {"messages": messages}
     
-    result = agent.invoke(payload)
+    async with agent_lock:
+        clear_captured_figures()
+        result = await asyncio.to_thread(agent.invoke, payload)
+        captured_figures = get_captured_figures()
 
-    # Get captured figures from the agent's execution
-    captured_figures = get_captured_figures()
     if captured_figures:
         for fig_json in captured_figures:
             try:
@@ -103,9 +106,6 @@ async def chat(
             except json.JSONDecodeError:
                 # Handle cases where the string is not valid JSON
                 print(f"Warning: Could not decode captured figure JSON: {fig_json}")
-
-    # Clear the global list of figures for the next request
-    clear_captured_figures()
 
     # Extract clean assistant markdown text
     from typing import Any
@@ -309,33 +309,46 @@ async def chat_stream(
         
         payload = {"messages": messages}
         
-        # Run agent in background, passing the handler in the config
-        config = {"callbacks": [handler]}
-        task = asyncio.create_task(asyncio.to_thread(lambda: agent_local.invoke(payload, config=config)))
-        
-        # Stream events as they arrive
-        while not task.done() or not q.empty():
+        async with agent_lock:
+            clear_captured_figures()
+            # Run agent in background, passing the handler in the config
+            config = {"callbacks": [handler]}
+            task = asyncio.create_task(asyncio.to_thread(lambda: agent_local.invoke(payload, config=config)))
+
+            # Stream events as they arrive
+            while not task.done() or not q.empty():
+                try:
+                    # Wait for an item with a timeout
+                    item_json = await asyncio.wait_for(q.get(), timeout=0.1)
+
+                    # Yield the JSON data as an SSE event
+                    yield f"data: {item_json}\n\n"
+
+                except asyncio.TimeoutError:
+                    # No item in queue, just continue and check task status again
+                    continue
+                except asyncio.CancelledError:
+                    break
+                except Exception:
+                    break
+
+            # Wait for task completion and handle potential errors
             try:
-                # Wait for an item with a timeout
-                item_json = await asyncio.wait_for(q.get(), timeout=0.1)
+                await task
+            except Exception as e:
+                yield f"data: {json.dumps({'type':'error','message': str(e)})}\n\n"
 
-                # Yield the JSON data as an SSE event
-                yield f"data: {item_json}\n\n"
+            captured_figures = get_captured_figures()
+            if captured_figures:
+                plot_artifacts = []
+                for fig_json in captured_figures:
+                    try:
+                        plot_artifacts.append({"type": "plot", "content": json.loads(fig_json)})
+                    except json.JSONDecodeError:
+                        print(f"Warning: Could not decode captured figure JSON: {fig_json}")
+                if plot_artifacts:
+                    yield f"data: {json.dumps({'type': 'artifacts', 'artifacts': plot_artifacts})}\n\n"
 
-            except asyncio.TimeoutError:
-                # No item in queue, just continue and check task status again
-                continue
-            except asyncio.CancelledError:
-                break
-            except Exception:
-                break
-        
-        # Wait for task completion and handle potential errors
-        try:
-            await task
-        except Exception as e:
-            yield f"data: {json.dumps({'type':'error','message': str(e)})}\n\n"
-        
         yield "data: {\"type\": \"done\"}\n\n"
     
     return StreamingResponse(sse_generator(), media_type="text/event-stream")
