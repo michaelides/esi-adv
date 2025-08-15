@@ -52,7 +52,7 @@
 }
 
 .sidebar.collapsed{
-    width: 60px;
+    width: 50px;
 }
 
 .sidebar.collapsed:hover{
@@ -63,20 +63,20 @@
 .sidebar img,
 .sidebar .menu,
 .sidebar .new-chat img {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
 }
 
 .sidebar .menu{
     display: block;
-    margin-left: 10px;
+    margin-left: 5px;
     cursor: pointer;
 }
 
 .sidebar .new-chat{
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 5px;
     padding: 10px 12px;                 /* match recent-entry */
     background-color: transparent;      /* follow bottom buttons */
     border-radius: 50px;                /* same pill shape */
@@ -100,8 +100,8 @@
 
 /* Make "+ New Chat" circular when collapsed */
 .sidebar.collapsed .new-chat{
-    width: 40px;
-    height: 40px;
+    width: 20px;
+    height: 20px;
     padding: 8px;
     justify-content: center;
 }
@@ -261,15 +261,15 @@
 }
 .sidebar .recent-entry .menu .item{
     padding: 8px 12px;
-    font-size: 14px;
+    font-size: 12px;
     display: flex;
     align-items: center;
     gap: 8px;
     white-space: nowrap;
 }
 .sidebar .recent-entry .menu .item svg{
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     opacity: 0.9;
 }
 .sidebar .recent-entry .menu .item:hover{ background: rgba(0,0,0,0.06); }
@@ -326,8 +326,8 @@
 
 .sidebar .new-chat {
     position: absolute;
-    top: 70px;
-    left: 14px;
+    top: 20px;
+    left: 5px;
 }
 
 

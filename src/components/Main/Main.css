@@ -190,8 +190,8 @@
 .msg-row.assistant{ justify-content:flex-start; }
 
 /* Bubble width rules */
-.msg-row.assistant .assistant-bubble{ max-width:95%; width:95%; }
-.msg-row.user .user-bubble{ max-width:80%; width:fit-content; align-self:flex-end; }
+.msg-row.assistant .assistant-bubble{ max-width:100%; width:100%; }
+.msg-row.user .user-bubble{ max-width:90%; width:fit-content; align-self:flex-end; }
 
 /* Utility to force full width inside message column */
 .full-width{
@@ -218,7 +218,7 @@
 
 /* Dark mode bubble styling: black bubbles with white text */
 [data-theme="dark"] .assistant-bubble{
-    background: #24262c !important; /* near-black bubble */
+    background: #08090c !important; /* near-black bubble */
     color: #ffffff !important;
 }
 [data-theme="dark"] .assistant-bubble *{ color: inherit !important; }
@@ -247,7 +247,7 @@
 .result .assistant-bubble *{
     font-family: inherit !important;
     font-size: 14px !important;
-    line-height: 1.8 !important;
+    line-height: 1.6 !important;
     color: inherit !important;
 }
 .result .assistant-bubble h1,
