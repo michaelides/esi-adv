@@ -38,3 +38,4 @@ markdown
 markdownify
 pycryptodome
 trio
+docarray
