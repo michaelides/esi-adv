@@ -650,6 +650,7 @@ const ContextProvider = (props) => {
             verifyAssistantAt: contextValue.verifyAssistantAt,
             pinSession: contextValue.pinSession,
             renameSession: contextValue.renameSession,
+            renameSessionWithValue: contextValue.renameSessionWithValue,
             deleteSession: contextValue.deleteSession,
         };
     }
