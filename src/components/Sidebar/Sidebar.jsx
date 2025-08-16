@@ -118,26 +118,22 @@ const Sidebar = () => {
   return (
     <div className={`sidebar ${!extended ? 'collapsed' : ''}`}>
       <div className="top">
-        <div className="sidebar-brand">
-          <div className="esi-logo-container"></div>
-        </div>
-        <div className="sidebar-toggle">
-          <img
-            onClick={() => setExtended(prev => !prev)}
-            className="menu"
-            src={assets.sidebar_icon}
-            alt="Toggle sidebar"
-            role="button"
-            style={{ width: 20, height: 20, cursor: 'pointer' }}
+        <div className="sidebar-icons">
+          <div className="sidebar-toggle">
+            <i
+              onClick={() => setExtended(prev => !prev)}
+              className="fi fi-rr-sidebar menu"
+              style={{ cursor: 'pointer', fontSize: '20px' }}
+              title="Toggle sidebar"
+            />
+          </div>
+          <i
+            onClick={()=>newChat()}
+            className="fa-regular fa-pen-to-square new-chat-icon"
+            title="New chat"
+            style={{ cursor: 'pointer', fontSize: '20px' }}
           />
         </div>
-        <img
-          onClick={()=>newChat()}
-          className="new-chat-icon"
-          src={assets.edit_icon}
-          alt="New chat"
-          title="New chat"
-        />
 
         <div className="recent" ref={(el)=>{ /* optional ref */ }}>
           <div className="recent-title" onClick={() => setFilesOpen(!filesOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

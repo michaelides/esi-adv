@@ -51,6 +51,16 @@
     filter: invert(1) brightness(1.2) contrast(0.95);
 }
 
+/* Dark mode styling for Font Awesome icons */
+[data-theme="dark"] .sidebar .fa-regular{
+    color: white;
+}
+
+/* Dark mode styling for fricon icons */
+[data-theme="dark"] .sidebar .fi{
+    color: white;
+}
+
 .sidebar.collapsed{
     width: 50px;
 }
@@ -61,7 +71,6 @@
 }
 
 .sidebar img,
-.sidebar .menu,
 .sidebar .new-chat img {
     width: 16px;
     height: 16px;
@@ -289,100 +298,32 @@
     cursor: pointer;
 }
 
-/* Brand header */
-.sidebar .sidebar-brand{
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 6px 12px 6px;
-    font-weight: 700;
-    font-size: 16px;
-}
-.sidebar .sidebar-brand .fa{ font-size: 20px; }
-.sidebar .sidebar-brand .esi-logo-container {
-    width: 90px;
-    height: 40px; /* Adjust as needed */
-    cursor: pointer;
-    background-color: #000; /* Default for light mode */
-    -webkit-mask: url('/src/assets/esi_logo.png') no-repeat center;
-    mask: url('/src/assets/esi-logo.png') no-repeat center;
-    -webkit-mask-size: contain;
-    mask-size: contain;
-}
-
-/* In dark mode, change the background color to white */
-[data-theme="dark"] .sidebar .sidebar-brand .esi-logo-container {
-    background-color: #fff;
-}
-
-.sidebar.collapsed .sidebar-brand .brand-text{ display: none; }
 
 .sidebar-toggle {
-    position: absolute;
-    top: 25px;
-    left: 15px;
     z-index: 10;
   }
   
-  /* Remove old new-chat styles */
-/*
-.sidebar .new-chat{
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 10px 12px;
-    background-color: transparent;
-    border-radius: 50px;
-    font-size: 12px;
-    color: inherit;
-    cursor: pointer;
+/* Container for sidebar icons */
+.sidebar-icons {
+    position: absolute;
+    top: 25px;
+    left: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 10;
 }
-.sidebar .new-chat img{ width: 20px; }
-.sidebar .new-chat p{ margin: 0; }
-
-.sidebar .new-chat:hover{ background-color: #e2e6eb; }
-
-[data-theme="dark"] .sidebar .new-chat{
-    background-color: transparent !important;
-    color: inherit !important;
-}
-[data-theme="dark"] .sidebar .new-chat:hover{ background-color: rgba(255,255,255,0.06) !important; }
-[data-theme="dark"] .sidebar .new-chat *{ color: inherit !important; }
-
-.sidebar.collapsed .new-chat{
-    width: 20px;
-    height: 20px;
-    padding: 8px;
-    justify-content: center;
-}
-.sidebar.collapsed .new-chat img{
-    width: 20px;
-}
-.sidebar.collapsed .new-chat p{
-    display: none;
-}
-.sidebar.collapsed:hover .new-chat{
-    width: auto;
-    height: auto;
-    padding: 10px 15px;
-}
-.sidebar.collapsed:hover .new-chat p{
-    display: inline;
-}
-*/
 
 /* New chat icon styling */
 .sidebar .new-chat-icon {
     width: 16px;
     height: 16px;
-    position: absolute;
-    top: 25px;
-    right: 15px;
     cursor: pointer;
     opacity: 0.6;
     transition: opacity 0.2s ease, background-color 0.2s ease;
     border-radius: 4px;
     padding: 2px;
+    margin-left: 2px; /* Align with toggle icon */
 }
 
 .sidebar .new-chat-icon:hover {
@@ -392,18 +333,24 @@
 
 /* Dark mode styling for new chat icon */
 [data-theme="dark"] .sidebar .new-chat-icon {
-    filter: invert(1) brightness(1.2) contrast(0.95);
+    color: #ffffff;
+    filter: none;
 }
 
 [data-theme="dark"] .sidebar .new-chat-icon:hover {
-    background-color: rgba(255,255,255,0.06);
+    background-color: rgba(255,255,255,0.1);
 }
 
-/* Positioning when collapsed */
+/* Ensure icons stay in same position in collapsed mode */
+.sidebar.collapsed .sidebar-icons {
+    top: 25px;
+    left: 15px;
+}
+
 .sidebar.collapsed .new-chat-icon {
-    top: 60px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: auto;
+    left: auto;
+    transform: none;
     right: auto;
 }
 
