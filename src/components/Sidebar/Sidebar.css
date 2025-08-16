@@ -322,12 +322,89 @@
     top: 25px;
     left: 15px;
     z-index: 10;
+  }
+  
+  /* Remove old new-chat styles */
+/*
+.sidebar .new-chat{
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 12px;
+    background-color: transparent;
+    border-radius: 50px;
+    font-size: 12px;
+    color: inherit;
+    cursor: pointer;
+}
+.sidebar .new-chat img{ width: 20px; }
+.sidebar .new-chat p{ margin: 0; }
+
+.sidebar .new-chat:hover{ background-color: #e2e6eb; }
+
+[data-theme="dark"] .sidebar .new-chat{
+    background-color: transparent !important;
+    color: inherit !important;
+}
+[data-theme="dark"] .sidebar .new-chat:hover{ background-color: rgba(255,255,255,0.06) !important; }
+[data-theme="dark"] .sidebar .new-chat *{ color: inherit !important; }
+
+.sidebar.collapsed .new-chat{
+    width: 20px;
+    height: 20px;
+    padding: 8px;
+    justify-content: center;
+}
+.sidebar.collapsed .new-chat img{
+    width: 20px;
+}
+.sidebar.collapsed .new-chat p{
+    display: none;
+}
+.sidebar.collapsed:hover .new-chat{
+    width: auto;
+    height: auto;
+    padding: 10px 15px;
+}
+.sidebar.collapsed:hover .new-chat p{
+    display: inline;
+}
+*/
+
+/* New chat icon styling */
+.sidebar .new-chat-icon {
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    top: 25px;
+    right: 15px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+    border-radius: 4px;
+    padding: 2px;
 }
 
-.sidebar .new-chat {
-    position: absolute;
-    top: 20px;
-    left: 5px;
+.sidebar .new-chat-icon:hover {
+    opacity: 1;
+    background-color: #e2e6eb;
+}
+
+/* Dark mode styling for new chat icon */
+[data-theme="dark"] .sidebar .new-chat-icon {
+    filter: invert(1) brightness(1.2) contrast(0.95);
+}
+
+[data-theme="dark"] .sidebar .new-chat-icon:hover {
+    background-color: rgba(255,255,255,0.06);
+}
+
+/* Positioning when collapsed */
+.sidebar.collapsed .new-chat-icon {
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
 }
 
 

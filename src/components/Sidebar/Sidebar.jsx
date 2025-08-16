@@ -24,7 +24,7 @@ const RecentEntry = ({ s, isActive, onActivate }) => {
   const close = () => setOpen(false);
 
   React.useEffect(() => { if (isRenaming && inputRef.current) inputRef.current.focus(); }, [isRenaming]);
-  React.useEffect(() => { setDraftTitle(live.title || ''); }, [live.title]);
+  React.useEffect(() => { if (!isRenaming) setDraftTitle(live.title || ''); }, [live.title, isRenaming]);
 
   // Actions
   const download = (e) => {
@@ -131,10 +131,13 @@ const Sidebar = () => {
             style={{ width: 20, height: 20, cursor: 'pointer' }}
           />
         </div>
-        <div onClick={()=>newChat()}className="new-chat">
-            <img src={assets.plus_icon} alt="" />
-            <p>New Chat</p>
-      </div>
+        <img
+          onClick={()=>newChat()}
+          className="new-chat-icon"
+          src={assets.edit_icon}
+          alt="New chat"
+          title="New chat"
+        />
 
         <div className="recent" ref={(el)=>{ /* optional ref */ }}>
           <div className="recent-title" onClick={() => setFilesOpen(!filesOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
