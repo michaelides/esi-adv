@@ -109,6 +109,7 @@ const Sidebar = () => {
     const[extended, setExtended] = useState(true)
     const { onSent, setRecentPrompt, newChat, sessions, activeSessionId, setActiveSession, openSettings, user, signInWithGoogle, signOut, showAllSessions, setShowAllSessions, isSettingsOpen, uploadedFiles, removeUploadedFile } = useContext(Context)
     const [filesOpen, setFilesOpen] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const loadPrompt = async (prompt) => {
       setRecentPrompt(prompt)
@@ -135,6 +136,16 @@ const Sidebar = () => {
           />
         </div>
 
+        <div className="search-box">
+          <input
+            type="text"
+            placeholder="Search chats..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="search-input"
+          />
+        </div>
+
         <div className="recent" ref={(el)=>{ /* optional ref */ }}>
           <div className="recent-title" onClick={() => setFilesOpen(!filesOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>Uploaded Files</span>
@@ -157,8 +168,12 @@ const Sidebar = () => {
 
           <p className="recent-title">Recent</p>
           {(() => {
-            const pinned = sessions.filter(x => x.pinned);
-            const others = sessions.filter(x => !x.pinned);
+            const filteredSessions = sessions.filter(s =>
+              s.title.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+
+            const pinned = filteredSessions.filter(x => x.pinned);
+            const others = filteredSessions.filter(x => !x.pinned);
 
             // Determine how many non-pinned to show when collapsed (fixed default)
             const maxRows = 8;
