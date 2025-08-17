@@ -331,6 +331,37 @@
     background-color: #e2e6eb;
 }
 
+/* Search box styling */
+.sidebar .search-box {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.sidebar .search-input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 20px;
+    border: 1px solid #e0e0e0;
+    background-color: #f0f4f9;
+    font-size: 14px;
+    color: #333;
+}
+
+.sidebar .search-input::placeholder {
+    color: #999;
+}
+
+/* Dark mode for search input */
+[data-theme="dark"] .sidebar .search-input {
+    background-color: #2a2a3a;
+    border-color: #444;
+    color: #fff;
+}
+
+[data-theme="dark"] .sidebar .search-input::placeholder {
+    color: #bbb;
+}
+
 /* Dark mode styling for new chat icon */
 [data-theme="dark"] .sidebar .new-chat-icon {
     color: #ffffff;
