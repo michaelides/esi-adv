@@ -158,15 +158,18 @@ const Sidebar = () => {
           </div>
 
           <div className="new-chat" onClick={()=>newChat()} title="New chat">
-            <i className="fa-regular fa-pen-to-square new-chat-icon" />
+            <i className="fi fi-br-plus new-chat-icon" />
             {extended && <p>New Chat</p>}
           </div>
         </div>
 
         <div className="recent" ref={(el)=>{ /* optional ref */ }}>
           <div className="recent-title" onClick={() => setRecentOpen(!recentOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span><img src={assets.message_icon} alt="" /> <span className="recent-title-text">Recent</span></span>
-            {recentOpen ? <ChevronUp /> : <ChevronDown />}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <i className="fi fi-rs-messages"></i>
+              {extended && <span className="recent-title-text">Recent</span>}
+            </div>
+            {extended && (recentOpen ? <ChevronUp /> : <ChevronDown />)}
           </div>
           {recentOpen && (() => {
             const filteredSessions = sessions.filter(s =>
@@ -226,8 +229,11 @@ const Sidebar = () => {
           })()}
           
           <div className="recent-title" onClick={() => setFilesOpen(!filesOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span><img src={assets.gallery_icon} alt="" /> <span className="recent-title-text">Uploaded Files</span></span>
-            {filesOpen ? <ChevronUp /> : <ChevronDown />}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <i className="fi fi-rr-file"></i>
+              {extended && <span className="recent-title-text">Uploaded Files</span>}
+            </div>
+            {extended && (filesOpen ? <ChevronUp /> : <ChevronDown />)}
           </div>
           {filesOpen && (
             <div className="section">
