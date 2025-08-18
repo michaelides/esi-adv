@@ -23,6 +23,8 @@ import copy_icon from './copy_icon.svg'
 import verify_icon from './verify_icon.svg'
 import sidebar_icon from './sidebar.svg'
 import esi_logo from './esi_logo.png'
+import network_nodes_logo from './network_nodes_logo.svg'
+import net_nodes_animation from './net_nodes_animation.svg'
 
 export const assets = {
     history_icon,
@@ -50,4 +52,6 @@ export const assets = {
     verify_icon,
     sidebar_icon,
     esi_logo,
+    network_nodes_logo,
+    net_nodes_animation,
 }

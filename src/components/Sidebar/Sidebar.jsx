@@ -12,6 +12,18 @@ const Kebab = ({ size=16 }) => (
   </svg>
 );
 
+const ChevronDown = ({ size=16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="m6 9 6 6 6-6" />
+  </svg>
+);
+
+const ChevronUp = ({ size=16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="m18 15-6-6-6 6" />
+  </svg>
+);
+
 const RecentEntry = ({ s, isActive, onActivate }) => {
   const [open, setOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
@@ -109,6 +121,7 @@ const Sidebar = () => {
     const[extended, setExtended] = useState(true)
     const { onSent, setRecentPrompt, newChat, sessions, activeSessionId, setActiveSession, openSettings, user, signInWithGoogle, signOut, showAllSessions, setShowAllSessions, isSettingsOpen, uploadedFiles, removeUploadedFile } = useContext(Context)
     const [filesOpen, setFilesOpen] = useState(true);
+    const [recentOpen, setRecentOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
 
     const loadPrompt = async (prompt) => {
@@ -124,50 +137,38 @@ const Sidebar = () => {
             <i
               onClick={() => setExtended(prev => !prev)}
               className="fi fi-rr-sidebar menu"
-              style={{ cursor: 'pointer', fontSize: '20px' }}
               title="Toggle sidebar"
             />
           </div>
-          <i
-            onClick={()=>newChat()}
-            className="fa-regular fa-pen-to-square new-chat-icon"
-            title="New chat"
-            style={{ cursor: 'pointer', fontSize: '20px' }}
-          />
-        </div>
+          
+          <div className="search-box">
+            <i
+              className="fa-solid fa-search search-icon"
+              onClick={() => !extended && setExtended(true)}
+            ></i>
+            {extended && (
+              <input
+                type="text"
+                placeholder="Search chats..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+              />
+            )}
+          </div>
 
-        <div className="search-box">
-          <input
-            type="text"
-            placeholder="Search chats..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
-          />
+          <div className="new-chat" onClick={()=>newChat()} title="New chat">
+            <i className="fa-regular fa-pen-to-square new-chat-icon" />
+            {extended && <p>New Chat</p>}
+          </div>
         </div>
 
         <div className="recent" ref={(el)=>{ /* optional ref */ }}>
-          <div className="recent-title" onClick={() => setFilesOpen(!filesOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>Uploaded Files</span>
-            <img src={assets.history_icon} alt="Toggle files" style={{ transform: filesOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+          <div className="recent-title" onClick={() => setRecentOpen(!recentOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span><img src={assets.message_icon} alt="" /> <span className="recent-title-text">Recent</span></span>
+            {recentOpen ? <ChevronUp /> : <ChevronDown />}
           </div>
-          {filesOpen && (
-            <div className="section">
-              {uploadedFiles.map((file, index) => (
-                <div key={index} className="recent-entry">
-                  <img src={assets.gallery_icon} alt="file icon" />
-                  <p className="title">{file.name}</p>
-                  <span className="more-btn" onClick={() => removeUploadedFile(file.name)} title="Remove file">
-                    <img src={assets.x_icon} alt="remove" />
-                  </span>
-                </div>
-              ))}
-              {uploadedFiles.length === 0 && <p style={{textAlign: 'center', fontSize: '13px', opacity: 0.7, margin: '10px 0'}}>No files uploaded</p>}
-            </div>
-          )}
-
-          <p className="recent-title">Recent</p>
-          {(() => {
+          {recentOpen && (() => {
             const filteredSessions = sessions.filter(s =>
               s.title.toLowerCase().includes(searchQuery.toLowerCase())
             );
@@ -223,6 +224,25 @@ const Sidebar = () => {
               </>
             );
           })()}
+          
+          <div className="recent-title" onClick={() => setFilesOpen(!filesOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span><img src={assets.gallery_icon} alt="" /> <span className="recent-title-text">Uploaded Files</span></span>
+            {filesOpen ? <ChevronUp /> : <ChevronDown />}
+          </div>
+          {filesOpen && (
+            <div className="section">
+              {uploadedFiles.map((file, index) => (
+                <div key={index} className="recent-entry">
+                  <img src={assets.gallery_icon} alt="file icon" />
+                  <p className="title">{file.name}</p>
+                  <span className="more-btn" onClick={() => removeUploadedFile(file.name)} title="Remove file">
+                    <img src={assets.x_icon} alt="remove" />
+                  </span>
+                </div>
+              ))}
+              {uploadedFiles.length === 0 && <p style={{textAlign: 'center', fontSize: '13px', opacity: 0.7, margin: '10px 0'}}>No files uploaded</p>}
+            </div>
+          )}
         </div>
         
       </div>

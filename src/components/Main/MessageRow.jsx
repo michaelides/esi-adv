@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const MessageRow = ({ m, idx, assets, onEdit }) => {
+const MessageRow = ({ m, idx, assets, onEdit, loading }) => {
   // Consume optional action handlers from context via props if passed down in the future
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(m.content || '');
@@ -19,7 +19,11 @@ const MessageRow = ({ m, idx, assets, onEdit }) => {
     >
       {/* Left avatar for assistant */}
       {m.role !== 'user' && (
-        <img src={assets.gemini_icon} alt="" style={{ width: 28, height: 28 }} />
+        <img
+          src={loading ? assets.net_nodes_animation : assets.network_nodes_logo}
+          alt=""
+          style={{ width: 28, height: 28 }}
+        />
       )}
 
       {/* Content area */}
@@ -45,7 +49,7 @@ const MessageRow = ({ m, idx, assets, onEdit }) => {
           <div className={editing ? "user-bubble full-width" : "user-bubble"} style={{ width: 'auto', maxWidth: '100%' }}>
             {editing ? (
               <div className="full-width" style={{ width: '100%' }}>
-                <div className="search-box full-width" style={{ width: '100%', borderRadius: 16 }}>
+                <div className="input-box full-width" style={{ width: '100%', borderRadius: 16 }}>
                   <textarea
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}

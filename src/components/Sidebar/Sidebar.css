@@ -4,7 +4,7 @@
     display: inline-flex;
     flex-direction: column;
     justify-content: space-between;
-    background-color: #f0f4f9;
+    background-color: #f7f5ff;
     padding: 25px 15px;
     width: 280px;
     transition: width 200ms ease, box-shadow 200ms ease;
@@ -33,7 +33,8 @@
 
 /* Icon images that are SVG via currentColor will follow; raster icons remain unchanged */
 [data-theme="dark"] .sidebar .recent-entry .more-btn svg,
-[data-theme="dark"] .sidebar .menu svg{
+[data-theme="dark"] .sidebar .menu svg,
+[data-theme="dark"] .sidebar .recent-title svg{
     fill: currentColor !important;
     stroke: currentColor !important;
 }
@@ -56,24 +57,21 @@
     color: white;
 }
 
-/* Dark mode styling for fricon icons */
-[data-theme="dark"] .sidebar .fi{
+/* Dark mode styling for recent title Flaticon icons */
+[data-theme="dark"] .sidebar .recent-title .fi{
     color: white;
 }
+
 
 .sidebar.collapsed{
     width: 50px;
 }
 
-.sidebar.collapsed:hover{
-    width: 280px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-}
 
 .sidebar img,
 .sidebar .new-chat img {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
 }
 
 .sidebar .menu{
@@ -83,17 +81,18 @@
 }
 
 .sidebar .new-chat{
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 5px;
-    padding: 10px 12px;                 /* match recent-entry */
-    background-color: transparent;      /* follow bottom buttons */
-    border-radius: 50px;                /* same pill shape */
-    font-size: 12px;
-    color: inherit;                     /* follow sidebar text color */
+    gap: 10px;
+    padding: 5px; 
+    background-color: transparent;
+    border-radius: 10px;
+    font-size: 14px;
+    color: inherit;
     cursor: pointer;
+    width: 100%;
 }
-.sidebar .new-chat img{ width: 20px; }
+
 .sidebar .new-chat p{ margin: 0; }
 
 /* Light mode hover same as recent-entry */
@@ -109,24 +108,21 @@
 
 /* Make "+ New Chat" circular when collapsed */
 .sidebar.collapsed .new-chat{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 0;
+    width: 100%;
+    position: relative;
+}
+.sidebar.collapsed .new-chat .new-chat-icon{
     width: 20px;
     height: 20px;
-    padding: 8px;
-    justify-content: center;
-}
-.sidebar.collapsed .new-chat img{
-    width: 20px;
+    padding: 5px;
+    margin: 0 auto;
 }
 .sidebar.collapsed .new-chat p{
     display: none;
-}
-.sidebar.collapsed:hover .new-chat{
-    width: auto;
-    height: auto;
-    padding: 10px 15px;
-}
-.sidebar.collapsed:hover .new-chat p{
-    display: inline;
 }
 
 /* Fade text/content on collapse */
@@ -136,6 +132,46 @@
     transition: opacity 150ms ease;
 }
 
+/* But keep the recent titles visible */
+.sidebar.collapsed .recent > .recent-title{
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    z-index: 1000;
+    position: relative;
+    display: block !important;
+}
+
+/* Hide recent content (except titles) when collapsed; reveal on hover */
+.sidebar.collapsed .recent > :not(.recent-title):not(.divider){
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none;
+    transition: opacity 150ms ease, visibility 150ms ease;
+}
+
+/* Ensure icons in recent titles remain visible when collapsed */
+.sidebar.collapsed .recent-title .fi{
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    color: #000 !important;
+    position: relative !important;
+    z-index: 1000 !important;
+    font-size: 20px !important;
+    width: 20px !important;
+    height: 20px !important;
+    transform: scale(1.2) !important;
+    transition: all 0.3s ease !important;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Dark mode styling for recent title Flaticon icons */
+[data-theme="dark"] .sidebar .recent-title .fi{
+    color: white !important;
+}
+
 .sidebar.collapsed .new-chat p,
 .sidebar.collapsed .recent,
 .sidebar.collapsed .bottom p{
@@ -143,36 +179,60 @@
     pointer-events: none;
 }
 
-/* Hide recent content when collapsed; reveal on hover */
-.sidebar.collapsed .recent{
-    opacity: 0;
-    visibility: hidden;
+/* Ensure icons are always visible and properly aligned */
+.sidebar .recent-title .fi{
+    display: inline-block;
+    vertical-align: middle;
+    min-width: 16px;
+    min-height: 16px;
+    color: inherit;
+}
+
+/* Add spacing between icons and text in recent titles */
+.sidebar .recent-title .fi{
+    margin-right: 8px;
+}
+
+/* Ensure consistent sizing for recent title icons */
+.sidebar .recent-title .fi{
+    font-size: 16px;
+}
+
+/* Hide text in recent titles when collapsed */
+.sidebar.collapsed .recent-title-text{
+    display: none !important;
+}
+
+/* Ensure icons in recent titles remain visible when collapsed */
+.sidebar.collapsed .recent-title .fa-regular{
+    opacity: 1 !important;
+    pointer-events: auto;
+    display: inline-block !important;
+}
+
+/* But keep the recent titles visible */
+.sidebar.collapsed .recent > .recent-title{
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto;
+    z-index: 10;
+    position: relative;
+}
+
+/* Hide recent content (except titles) when collapsed; reveal on hover */
+.sidebar.collapsed .recent > :not(.recent-title):not(.divider){
+    opacity: 0 !important;
+    visibility: hidden !important;
     pointer-events: none;
     transition: opacity 150ms ease, visibility 150ms ease;
 }
-.sidebar.collapsed:hover .recent{
+
+.sidebar.collapsed .search-box {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-}
-
-/* Increase specificity to defeat overrides */
-.app .sidebar.collapsed:hover .recent{
-    opacity: 1 !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
-}
-
-.sidebar.collapsed:hover .recent *{
-    pointer-events: auto;
-    visibility: visible;
-}
-
-.sidebar.collapsed:hover .new-chat p,
-.sidebar.collapsed:hover .recent,
-.sidebar.collapsed:hover .bottom p{
-    opacity: 1;
-    pointer-events: auto;
+    display: flex;
+    align-items: center;
 }
 
 .sidebar .top{
@@ -183,7 +243,7 @@
     flex: 0 0 auto; /* keep visible; not part of scroll */
 }
 .sidebar .recent{
-    margin-top: 80px;
+    margin-top: 5px;
     display: flex;
     flex-direction: column;
     animation: fadeIn 1.5s;
@@ -202,8 +262,23 @@
 
 .sidebar .recent-title{
     margin-top: 10px;
-    margin-bottom: 10px;   
+    margin-bottom: 10px;
+    font-size: 14px;
+    border-radius: 10px;
+    padding: 5px 10px;
+    transition: background-color 0.2s ease;
 }
+
+.sidebar .recent-title:hover{
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.sidebar .recent-title svg{
+    width: 16px;
+    height: 16px;
+    transition: transform 0.2s ease;
+}
+
 
 
 .sidebar .recent .divider{
@@ -216,8 +291,8 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 12px;
-    border-radius: 30px;
+    padding: 5px 12px;
+    border-radius: 5px;
     color: #282828;
     cursor: pointer;
     position: relative;
@@ -262,7 +337,7 @@
     border: 1px solid var(--border);
     border-radius: 8px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-    padding: 6px 0;
+    padding: 5px 0;
     min-width: 140px;
     z-index: 1000;
     height: auto;
@@ -284,7 +359,7 @@
 .sidebar .recent-entry .menu .item:hover{ background: rgba(0,0,0,0.06); }
 
 .sidebar .recent-entry:hover{
-    background-color: #e2e6eb;    
+    background-color: #e2e6eb;
 }
 
 .sidebar .bottom{
@@ -301,29 +376,44 @@
 
 .sidebar-toggle {
     z-index: 10;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 20px;
+    width: 20px;
+    border-radius: 5px;
   }
   
 /* Container for sidebar icons */
 .sidebar-icons {
-    position: absolute;
-    top: 25px;
-    left: 15px;
     display: flex;
     flex-direction: column;
     gap: 15px;
-    z-index: 10;
+    margin-bottom: 20px;
+    padding: 0; /* Remove padding to allow full width */
+    align-items: flex-start; /* Align items to the start */
+    height: auto; /* Allow height to adjust to content */
 }
+
+.sidebar .sidebar-toggle:hover {
+    opacity: 1;
+    background-color: #e2e6eb;
+}
+
 
 /* New chat icon styling */
 .sidebar .new-chat-icon {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
-    opacity: 0.6;
+    opacity: 1;
     transition: opacity 0.2s ease, background-color 0.2s ease;
-    border-radius: 4px;
-    padding: 2px;
-    margin-left: 2px; /* Align with toggle icon */
+    border-radius: 2px;
+/*    padding: 5px 0px;*/
+    display: inline-flex; /* Ensure proper alignment */
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
 }
 
 .sidebar .new-chat-icon:hover {
@@ -333,18 +423,68 @@
 
 /* Search box styling */
 .sidebar .search-box {
-    margin-top: 20px;
-    margin-bottom: 10px;
+    margin-bottom: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    position: relative;
+    height: 20px; /* Set consistent height */
+    width: 100%; /* Make search box take full width */
+}
+
+.sidebar.collapsed .search-box {
+    padding: 0;
+    margin-bottom: 0;
+}
+
+.sidebar.collapsed .search-icon {
+    cursor: pointer;
+    opacity: 1.0;
+    transition: opacity 0.2s ease;
+    position: absolute;
+    border-radius: 5px;
+    pointer-events: auto; /* Enable click events */
+}
+
+.sidebar.collapsed .search-icon:hover {
+    opacity: 1;
+    colour: #333; /* Darker color on hover */
+    background-color: #e2e6eb;
+}
+
+.sidebar .search-icon {
+    position: absolute;
+    z-index: 1;
+    opacity: .9;
+    pointer-events: none; /* Prevent icon from interfering with input clicks */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 20px;
+    width: 20px;
+    left: 5px; /* Position icon from the left */
+}
+
+.sidebar .search-icon:hover {
+    opacity: 1;
 }
 
 .sidebar .search-input {
+    position: relative;
     width: 100%;
-    padding: 10px;
-    border-radius: 20px;
-    border: 1px solid #e0e0e0;
-    background-color: #f0f4f9;
+    padding: 5px 5px 5px 25px; /* Adjust to account for icon */
+    border-radius: 10px;
+    border: 1px solid var(--border); /* Light grey by default */
+    background-color: #f7f5ff;
     font-size: 14px;
     color: #333;
+    margin-left: 0; /* Remove left margin to extend to full width */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.sidebar .search-input:focus {
+    border: 1px solid #a855f7; /* Purple when focused */
+    outline: none; /* Remove default outline */
 }
 
 .sidebar .search-input::placeholder {
@@ -353,13 +493,28 @@
 
 /* Dark mode for search input */
 [data-theme="dark"] .sidebar .search-input {
-    background-color: #2a2a3a;
-    border-color: #444;
+    background-color: #191823;
+    border: 1px solid #a855f7;
     color: #fff;
 }
 
 [data-theme="dark"] .sidebar .search-input::placeholder {
-    color: #bbb;
+    color: #f2f0f0;
+}
+
+/* Dark mode styling for Font Awesome solid icons */
+[data-theme="dark"] .sidebar .fa-solid {
+    color: white;
+}
+
+/* Dark mode styling for search icon */
+[data-theme="dark"] .sidebar .search-icon {
+    color: white;
+    opacity: 1;
+}
+
+[data-theme="dark"] .sidebar .search-icon:hover {
+    opacity: 1;
 }
 
 /* Dark mode styling for new chat icon */
@@ -372,17 +527,26 @@
     background-color: rgba(255,255,255,0.1);
 }
 
+/* Dark mode hover highlighting for section headings */
+[data-theme="dark"] .sidebar .recent-title:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
 /* Ensure icons stay in same position in collapsed mode */
 .sidebar.collapsed .sidebar-icons {
-    top: 25px;
-    left: 15px;
+    padding: 0px; /* Remove padding to allow full width */
+    height: auto; /* Allow height to adjust to content */
+    margin-bottom: 20px;
+    align-items: center; /* Center items when collapsed */
 }
 
 .sidebar.collapsed .new-chat-icon {
-    top: auto;
-    left: auto;
-    transform: none;
-    right: auto;
+    display: inline-flex; /* Ensure proper alignment */
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
+    height: 20px; /* Match height of other icons */
+    width: 20px;
+    margin: 0 auto; /* Center the icon */
 }
 
 

@@ -15,7 +15,7 @@ html, body, #root{
   --bg: #ffffff;
   --text: #141414;
   --text-secondary: #5a5a5a;
-  --panel-bg: #bcbbbd;
+  --panel-bg:  #f7f5ff; /* #bcbbbd; */ /* light purple */  
   --border: #e3e3e3;
 }
 

@@ -75,9 +75,9 @@ const Main = ({ toggleArtifacts }) => {
   return (
     <div className="main">
       <div className="nav">
-        <div onClick={()=>newChat()} className="gemini-logo">
-          {/* brand moved to sidebar */}
-        </div>
+          <div onClick={()=>newChat()} className="gemini-logo">
+              <img src={assets.network_nodes_logo} alt="Assistant" />
+          </div>
         <div className="nav-right">
           {artifacts.length > 0 && (
             <button onClick={toggleArtifacts} className="artifacts-button">
@@ -204,6 +204,7 @@ const Main = ({ toggleArtifacts }) => {
                   idx={idx}
                   assets={assets}
                   onEdit={(newText) => editUserMessageAndRegenerate(idx, newText)}
+                  loading={loading && isLast && m.role === 'assistant'}
                 />
                 {m.role === 'assistant' && (
                   <div className="action-bar" style={{ display: 'flex', gap: 14, margin: '6px 0 18px 36px', opacity: 0.9, alignItems: 'center' }}>
@@ -223,7 +224,7 @@ const Main = ({ toggleArtifacts }) => {
 
   
         <div className="main-bottom">
-            <div className="search-box">
+            <div className="input-box">
             <textarea
               onChange={(e) => setInput(e.target.value)}
               value={input}

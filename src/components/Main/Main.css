@@ -24,6 +24,18 @@
     border-radius: 50%;
 }
 
+.gemini-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.gemini-logo img {
+    width: 40px;
+    height: 40px;
+}
+
 .main-container{
     max-width: 900px;
     margin: auto;
@@ -92,7 +104,7 @@
     box-shadow: 0 -1px 0 var(--border) inset; /* subtle top divider */
 }
 
-.search-box{
+.input-box{
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -105,12 +117,12 @@
     border-radius: 20px;
 }
 
-.search-box img{
+.input-box img{
     width: 24px;
     cursor: pointer;
 }
 
-.search-box textarea{
+.input-box textarea{
     flex: 1;
     max-height: 40px;
     border: none;
@@ -121,17 +133,17 @@
     resize: none;
     overflow: auto;
     line-height: normal;
-    white-space: pre-wrap; 
+    white-space: pre-wrap;
     word-break: break-word;
-    font-size: 14px; 
+    font-size: 14px;
     color: var(--text);
 }
 
-.search-box textarea::-webkit-scrollbar {
+.input-box textarea::-webkit-scrollbar {
     display: none;
 }
 
-.search-box input{
+.input-box input{
     flex: 1;
     border: none;
     background: transparent;
@@ -141,7 +153,7 @@
     color: var(--text);
 }
 
-.search-box div{
+.input-box div{
     display: flex;
     align-items: center;
     gap: 15px;
@@ -200,20 +212,20 @@
     flex: 1 1 auto !important;
 }
 .msg-row .user-bubble.full-width,
-.msg-row .user-bubble .search-box.full-width{
+.msg-row .user-bubble .input-box.full-width{
     width: 100% !important;
     max-width: 100% !important;
     flex: 1 1 auto !important;
 }
 
-/* Optional larger bubble styling for better readability */
+/* Optional larger bubble styling for better readability original colout = f7f9fc*/
 .user-bubble, .assistant-bubble{
     padding: 14px 16px;
-    background: #f7f9fc;
+    background: #ffffff;
     border-radius: 12px;
 }
 .user-bubble{
-    background: #eef3fb;
+    background: #f7f5ff;
 }
 
 /* Dark mode bubble styling: black bubbles with white text */
@@ -235,8 +247,8 @@
     font-size: 14px;
     line-height: 1.8;
 }
-.result .search-box,
-.result .search-box textarea{
+.result .input-box,
+.result .input-box textarea{
     font-family: inherit !important;
     font-size: inherit !important;
     line-height: inherit !important;
@@ -356,17 +368,17 @@
     .main-bottom img{
         width: 20px;
     }
-    .search-box{
+    .input-box{
         padding: 5px 10px;
     }
-    .search-box{
+    .input-box{
         gap: 5px;
     }
     /* slightly more room on small screens due to tighter layout */
     .result{ padding-bottom: 140px; }
 }
 
-[data-theme="dark"] .search-box img {
+[data-theme="dark"] .input-box img {
     filter: invert(1);
 }
 
