@@ -171,7 +171,7 @@ const Sidebar = () => {
             </div>
             {extended && (recentOpen ? <ChevronUp /> : <ChevronDown />)}
           </div>
-          {recentOpen && (() => {
+          {extended && recentOpen && (() => {
             const filteredSessions = sessions.filter(s =>
               s.title.toLowerCase().includes(searchQuery.toLowerCase())
             );
@@ -235,7 +235,7 @@ const Sidebar = () => {
             </div>
             {extended && (filesOpen ? <ChevronUp /> : <ChevronDown />)}
           </div>
-          {filesOpen && (
+          {extended && filesOpen && (
             <div className="section">
               {uploadedFiles.map((file, index) => (
                 <div key={index} className="recent-entry">
