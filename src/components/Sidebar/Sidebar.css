@@ -115,14 +115,14 @@
 
 /* Make "+ New Chat" circular when collapsed */
 .sidebar.collapsed .new-chat{
-    display: block;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 10px 0;
     width: 100%;
     position: relative;
 }
 .sidebar.collapsed .new-chat .new-chat-icon{
-    padding: 5px;
     margin: 0;
 }
 .sidebar.collapsed .new-chat p{
@@ -166,9 +166,7 @@
     font-size: 20px !important;
     width: 20px !important;
     height: 20px !important;
-    transform: scale(1.2) !important;
     transition: all 0.3s ease !important;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Dark mode styling for recent title Flaticon icons */
