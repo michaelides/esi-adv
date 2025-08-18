@@ -1,32 +1,58 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef, useEffect } from 'react';
 import Sidebar from './components/Sidebar/Sidebar'
 import Main from './components/Main/Main'
-import ArtifactsPanel from './components/Artifacts/ArtifactsPanel'
+import SettingsPanel from './components/Settings/SettingsPanel'
 import { Context } from './context/Context';
 import './App.css'
 
 const App = () => {
-  const [isArtifactsVisible, setArtifactsVisible] = useState(true);
-  const { artifacts } = useContext(Context);
+  const { isSettingsOpen, closeSettings } = useContext(Context);
+  const settingsRef = useRef(null);
+  const [settingsPosition, setSettingsPosition] = useState({ top: 0, left: 0 });
 
-  const toggleArtifactsPanel = () => {
-    setArtifactsVisible(!isArtifactsVisible);
+  const handleSettingsBackdropClick = (e) => {
+    if (e.target.classList.contains('settings-backdrop')) {
+      closeSettings();
+    }
   };
 
-  const closeArtifactsPanel = () => {
-    setArtifactsVisible(false);
-  };
+  // Set up a global function to update settings position
+  useEffect(() => {
+    const updateSettingsPosition = (rect) => {
+      setSettingsPosition({
+        top: rect.bottom,
+        left: rect.left
+      });
+    };
+
+    // Expose function globally for Main component to call
+    window.updateSettingsPosition = updateSettingsPosition;
+
+    return () => {
+      delete window.updateSettingsPosition;
+    };
+  }, []);
 
   return (
     <div className="app">
       <Sidebar/>
       <div className="main-wrap">
-        <Main toggleArtifacts={toggleArtifactsPanel} />
+        <Main />
       </div>
-      <ArtifactsPanel
-        isVisible={isArtifactsVisible && artifacts.length > 0}
-        onClose={closeArtifactsPanel}
-      />
+      {isSettingsOpen && (
+        <div className="settings-backdrop" onClick={handleSettingsBackdropClick}>
+          <div
+            style={{
+              position: 'absolute',
+              top: settingsPosition.top,
+              left: settingsPosition.left,
+              zIndex: 1001
+            }}
+          >
+            <SettingsPanel />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

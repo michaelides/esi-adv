@@ -1,43 +1,34 @@
-# a Simple Gemini Clone
+---
+title: ESI Advanced Agent
+emoji: 🤖
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+---
 
-## Introduction
+# ESI Advanced Research Agent
 
-This simple Gemini clone is a React-based chatbot inspired by Google Gemini. Initially, it was conceived as a straightforward clone, but this project evolved into an excercise in creative problem-solving and working with AWS in the face of the current Google Gemini API access restrictions in Canada.
+This Hugging Face Space hosts an advanced research agent designed to assist with a variety of tasks, including data analysis, web research, and document comprehension.
 
-## Features
+## 🚀 How to Use
 
-- **Google Gemini-like Interface**: Recreates the intuitive and user-friendly interface of Google Gemini, offering users a seamless experience.
-- **Cross-Region API Access**: Implements a custom AWS Lambda server in Node.js to bypass regional restrictions, enabling unrestricted API access.
-- **Dynamic Data Retrieval**: Efficient communication with the AWS Lambda server to fetch and display data, ensuring real-time accuracy and responsiveness.
+1.  **Enter your query:** Type your research question or task in the chatbox.
+2.  **Upload a file (Optional):** You can upload various file types for the agent to analyze, including:
+    *   CSV, SAV, Rdata
+    *   PDF
+3.  **Interact:** The agent will process your request, perform the necessary actions (like searching the web, analyzing data, or reading documents), and provide a comprehensive response. It may also generate artifacts like plots or tables.
 
-## Technologies
+## 🛠️ Configuration
 
-- **Frontend**: Developed using React with Vite for an optimized development and build process, leveraging its component-based architecture for a scalable and maintainable codebase.
-- **Backend**: Utilizes Node.js to set up an AWS Lambda function that acts as a proxy, facilitating API requests that would otherwise be restricted in Canada.
-- **API Integration**: Demonstrates adept handling of third-party API integration, ensuring seamless data flow despite geographical constraints.
+This application requires API keys for its tools to function correctly. Please add the following as **Secrets** in your Hugging Face Space settings:
 
-## Getting Started
+*   `GOOGLE_API_KEY`: Your Google API key for Gemini models.
+*   `TAVILY_API_KEY`: Your API key for the Tavily search tool.
+*   `OPENROUTER_API_KEY`: Your OpenRouter API key (if you plan to use models from OpenRouter).
 
-To get a local copy up and running follow these simple steps.
+## ⚙️ Technical Details
 
-### Prerequisites
-
-- Install [Node.js](https://nodejs.org/en/) (which comes with [npm](http://npmjs.com)) on your computer.
-  
-### Installation
-
-1. Clone the repository:
-git clone (https://github.com/olyaiy/gemini-clone.git)
-
-2. Navigate to the project directory:
-cd gemini-clone
-
-3. Install project dependencies using npm:
-```npm install``` Or using yarn: ```yarn```
-
-### Running the Application
-
-1. To start the Vite development server:
-```npm run dev``` Or if you are using yarn: ```yarn dev```
-
-2. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+*   **Frontend:** The user interface is built with React and Vite.
+*   **Backend:** The server is a Python application using the FastAPI framework.
+*   **Containerization:** The application is containerized using Docker for easy deployment on Hugging Face Spaces.

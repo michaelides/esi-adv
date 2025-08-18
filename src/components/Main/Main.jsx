@@ -1,18 +1,17 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useRef, useCallback } from 'react';
 import "./Main.css"
 import { assets } from '../../assets/assets'
 import { Context } from '../../context/Context'
 import MessageRow from './MessageRow'
 import ThinkingBlob from './ThinkingBlob'
-import { useRef, useCallback } from 'react'
 
 
-const Main = ({ toggleArtifacts }) => {
+const Main = () => {
 
-  const {onSent,setRecentPrompt,recentPrompt,showResult,loading,resultData,input,setInput,newChat,messages,editUserMessageAndRegenerate, redoAssistantAt, copyAssistantAt, shareAssistantAt, verifyAssistantAt, toast, thinkingPhrase, user, signOut, signInWithGoogle, artifacts} = useContext(Context)
-  const [menuOpen, setMenuOpen] = useState(false);
+  const {onSent,setRecentPrompt,recentPrompt,showResult,loading,resultData,input,setInput,newChat,messages,editUserMessageAndRegenerate, redoAssistantAt, copyAssistantAt, shareAssistantAt, verifyAssistantAt, toast, thinkingPhrase, user, signOut, signInWithGoogle, sidebarExtended, openSettings} = useContext(Context)
   const [historyIndex, setHistoryIndex] = useState(-1);
   const fileInputRef = useRef(null);
+  const settingsIconRef = useRef(null);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -48,7 +47,7 @@ const Main = ({ toggleArtifacts }) => {
       e.preventDefault();
       if (input.trim()) {
         onSent();
-        setHistoryIndex(-1); 
+        setHistoryIndex(-1);
       }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
@@ -72,93 +71,23 @@ const Main = ({ toggleArtifacts }) => {
     }
   };
 
+  const handleOpenSettings = () => {
+    // Update the position of the settings panel
+    if (settingsIconRef.current && window.updateSettingsPosition) {
+      const rect = settingsIconRef.current.getBoundingClientRect();
+      window.updateSettingsPosition(rect);
+    }
+    openSettings();
+  };
+
   return (
     <div className="main">
       <div className="nav">
-          <div onClick={()=>newChat()} className="gemini-logo">
+          <div onClick={()=>newChat()} className={`esi-logo ${sidebarExtended ? 'hidden' : ''}`}>
               <img src={assets.network_nodes_logo} alt="Assistant" />
+              <span className="esi-text">esi</span>
           </div>
         <div className="nav-right">
-          {artifacts.length > 0 && (
-            <button onClick={toggleArtifacts} className="artifacts-button">
-              <img src={assets.code_icon} alt="Artifacts" />
-              <span>Artifacts</span>
-            </button>
-          )}
-          {!user ? (
-            <div
-              className="bottom-item recent-entry"
-            onClick={signInWithGoogle}
-            title="Sign in with Google"
-            style={{
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              fontSize: 13,
-              lineHeight: 1,
-              transform: 'translateY(-2px)'
-            }}
-          >
-            <i className="fa-regular fa-circle-user" style={{ fontSize: 16, opacity: 0.9 }} aria-hidden="true"></i>
-            <span style={{ fontSize: 13 }}>Sign in</span>
-          </div>
-          ) : (
-          <div style={{ position: 'relative' }}>
-            <div
-              onClick={() => setMenuOpen(v => !v)}
-              onMouseEnter={(e) => e.currentTarget.parentElement.querySelector('.avatar-tip')?.classList.add('show')}
-              onMouseLeave={(e) => e.currentTarget.parentElement.querySelector('.avatar-tip')?.classList.remove('show')}
-              style={{ cursor: 'pointer' }}
-            >
-              {(() => {
-                const u = user;
-                const meta = u?.user_metadata || {};
-                const avatar = meta.avatar_url || meta.picture;
-                if (avatar) {
-                  return <img src={avatar} alt={meta.full_name || u?.email || 'User'} style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover' }} />;
-                }
-                const name = meta.full_name || u?.email || '';
-                const initials = String(name).trim().slice(0, 1).toUpperCase();
-                return (
-                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#444', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>
-                    {initials}
-                  </div>
-                );
-              })()}
-            </div>
-
-            {user && (
-              <div
-                className="avatar-tip"
-                style={{
-                  position: 'absolute', right: 0, top: '110%', background: 'var(--panel-bg)', color: 'var(--text)', border: '1px solid var(--border)', padding: '8px 10px', borderRadius: 8, boxShadow: '0 6px 20px rgba(0,0,0,0.15)', whiteSpace: 'nowrap', fontSize: 13, opacity: 0, pointerEvents: 'none', transition: 'opacity .12s ease', zIndex: 20
-                }}
-              >
-                <div style={{ fontWeight: 600 }}>{user.user_metadata?.full_name || user.email}</div>
-                {user.email && <div style={{ opacity: 0.8 }}>{user.email}</div>}
-              </div>
-            )}
-
-            {menuOpen && user && (
-              <div
-                role="menu"
-                style={{ position: 'absolute', right: 0, top: '110%', background: 'var(--panel-bg)', color: 'var(--text)', border: '1px solid var(--border)', padding: '6px 0', borderRadius: 8, boxShadow: '0 8px 28px rgba(0,0,0,0.18)', minWidth: 180, zIndex: 30 }}
-              >
-                <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                  <div style={{ fontWeight: 600, marginBottom: 2 }}>{user.user_metadata?.full_name || 'Account'}</div>
-                  <div style={{ opacity: 0.8 }}>{user.email}</div>
-                </div>
-                <button
-                  onClick={() => { setMenuOpen(false); signOut(); }}
-                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px', background: 'transparent', color: 'inherit', border: 'none', cursor: 'pointer', font: 'inherit' }}
-                >
-                  Sign out
-                </button>
-              </div>
-            )}
-          </div>
-          )}
         </div>
       </div>
       <div className="main-container">
@@ -239,21 +168,26 @@ const Main = ({ toggleArtifacts }) => {
                 style={{ display: 'none' }}
                 accept=".csv,.spss,.sav,.rdata,.rds,.pdf"
               />
-              <img
-                src={assets.gallery_icon}
-                alt="Upload file"
+              <i
+                className="fa-solid fa-paperclip"
                 onClick={() => fileInputRef.current.click()}
                 style={{ cursor: 'pointer' }}
-              />
-              <img src={assets.mic_icon} alt="" />
+                title="Upload file"
+              ></i>
+              <i
+                ref={settingsIconRef}
+                className="fa-solid fa-sliders"
+                onClick={handleOpenSettings}
+                style={{ cursor: 'pointer' }}
+              ></i>
               {input || fileInputRef.current?.files?.length > 0 ? (
                 <img onClick={() => onSent(input, fileInputRef.current?.files[0])} src={assets.send_icon} alt="Send" />
               ) : null}
             </div>
           </div>
             <div className="bottom-info">
-              <p>Made by George Michaelides for NBS-7091A and NBS-7095X. 
-              ESI uses AI to help you navigate the dissertation process and can makde mistakes.</p>
+              <p>Made by George Michaelides for NBS-7091A and NBS-7095X.
+              ESI uses AI to help you navigate the dissertation process and can make mistakes.</p>
               <p>⚠️ Remember: Always consult your dissertation supervisor for final guidance and decisions.</p>
             </div>
 

@@ -2,7 +2,25 @@ import React, { useContext, useState } from 'react'
 import "./Sidebar.css"
 import {assets} from '../../assets/assets'
 import { Context } from '../../context/Context'
-import SettingsPanel from '../Settings/SettingsPanel'
+
+// Helper function to determine file type based on extension
+const getFileTypeIcon = (fileName) => {
+  const extension = fileName.split('.').pop().toLowerCase();
+  
+  // PDF files
+  if (extension === 'pdf') {
+    return <i className="fi fi-rr-file-pdf" />;
+  }
+  
+  // Data files
+  const dataExtensions = ['csv', 'xlsx', 'xls', 'rdata', 'rds', 'spss', 'sav'];
+  if (dataExtensions.includes(extension)) {
+    return <i className="fi fi-rr-chart-histogram" />;
+  }
+  
+  // Default file icon
+  return <img src={assets.gallery_icon} alt="file icon" />;
+};
 
 const Kebab = ({ size=16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -118,11 +136,11 @@ const RecentEntry = ({ s, isActive, onActivate }) => {
 
 const Sidebar = () => {
 
-    const[extended, setExtended] = useState(true)
-    const { onSent, setRecentPrompt, newChat, sessions, activeSessionId, setActiveSession, openSettings, user, signInWithGoogle, signOut, showAllSessions, setShowAllSessions, isSettingsOpen, uploadedFiles, removeUploadedFile } = useContext(Context)
+    const { sidebarExtended: extended, setSidebarExtended: setExtended, onSent, setRecentPrompt, newChat, sessions, activeSessionId, setActiveSession, openSettings, user, signInWithGoogle, signOut, showAllSessions, setShowAllSessions, isSettingsOpen, uploadedFiles, removeUploadedFile } = useContext(Context)
     const [filesOpen, setFilesOpen] = useState(true);
     const [recentOpen, setRecentOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [menuOpen, setMenuOpen] = useState(false);
 
     const loadPrompt = async (prompt) => {
       setRecentPrompt(prompt)
@@ -131,15 +149,19 @@ const Sidebar = () => {
 
   return (
     <div className={`sidebar ${!extended ? 'collapsed' : ''}`}>
+      <div className="sidebar-toggle">
+        <i
+          onClick={() => setExtended(prev => !prev)}
+          className="fi fi-rr-sidebar menu"
+          title="Toggle sidebar"
+        />
+      </div>
       <div className="top">
+        <div className="esi-logo-sidebar" onClick={()=>newChat()}>
+          <img src={assets.network_nodes_logo} alt="Assistant" />
+          <span className="esi-text">esi</span>
+        </div>
         <div className="sidebar-icons">
-          <div className="sidebar-toggle">
-            <i
-              onClick={() => setExtended(prev => !prev)}
-              className="fi fi-rr-sidebar menu"
-              title="Toggle sidebar"
-            />
-          </div>
           
           <div className="search-box">
             <i
@@ -239,7 +261,7 @@ const Sidebar = () => {
             <div className="section">
               {uploadedFiles.map((file, index) => (
                 <div key={index} className="recent-entry">
-                  <img src={assets.gallery_icon} alt="file icon" />
+                  {getFileTypeIcon(file.name)}
                   <p className="title">{file.name}</p>
                   <span className="more-btn" onClick={() => removeUploadedFile(file.name)} title="Remove file">
                     <img src={assets.x_icon} alt="remove" />
@@ -253,11 +275,93 @@ const Sidebar = () => {
         
       </div>
       <div className="bottom">
-        <div className="bottom-item recent-entry" onClick={openSettings}>
-            <img src={assets.setting_icon} alt="" />
-            <p>Settings</p>
-        </div>
-        {isSettingsOpen && <SettingsPanel />}
+        {!user ? (
+          <div
+            className="bottom-item recent-entry"
+            onClick={signInWithGoogle}
+            title="Sign in with Google"
+            style={{
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 13,
+              lineHeight: 1,
+            }}
+          >
+            <i className="fa-regular fa-circle-user" style={{ fontSize: 16, opacity: 0.9 }} aria-hidden="true"></i>
+            {extended && <span style={{ fontSize: 13 }}>Sign in</span>}
+          </div>
+        ) : (
+          <div style={{ position: 'relative', width: '100%' }}>
+            <div
+              onClick={() => setMenuOpen(v => !v)}
+              className="user-avatar-container"
+              style={{
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 13,
+                lineHeight: 1,
+                padding: '5px',
+                borderRadius: '5px',
+                transition: 'background-color 0.2s ease',
+              }}
+            >
+              {(() => {
+                const u = user;
+                const meta = u?.user_metadata || {};
+                const avatar = meta.avatar_url || meta.picture;
+                if (avatar) {
+                  return <img src={avatar} alt={meta.full_name || u?.email || 'User'} style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} />;
+                }
+                // Use the avatar asset as fallback when user is signed in but has no Google avatar
+                return <img src={assets.avatar} alt="User" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} />;
+              })()}
+              {extended && (
+                <span style={{ fontSize: 13 }}>
+                  {user.user_metadata?.full_name || user.email}
+                </span>
+              )}
+            </div>
+
+            {menuOpen && user && (
+              <div
+                role="menu"
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  bottom: '100%',
+                  background: 'var(--panel-bg)',
+                  color: 'var(--text)',
+                  border: '1px solid var(--border)',
+                  padding: '6px 0',
+                  borderRadius: 8,
+                  boxShadow: '0 8px 28px rgba(0,0,0,0.18)',
+                  minWidth: 180,
+                  zIndex: 30,
+                  marginBottom: '5px'
+                }}
+              >
+                <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', fontSize: 12 }}>
+                  <div style={{ fontWeight: 600, marginBottom: 2 }}>{user.user_metadata?.full_name || 'Account'}</div>
+                  <div style={{ opacity: 0.8 }}>{user.email}</div>
+                </div>
+                <button
+                  onClick={() => { setMenuOpen(false); signOut(); }}
+                  style={{ 
+                    display: 'block', width: '100%', textAlign: 'left', 
+                    padding: '10px 12px', background: 'transparent', 
+                    fontSize: '12px', color: 'inherit', border: 'none', 
+                    cursor: 'pointer', font: 'inherit' }}
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

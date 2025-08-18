@@ -24,17 +24,30 @@
     border-radius: 50%;
 }
 
-.gemini-logo {
+.esi-logo {
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    transform: translateY(-5px); /* Move logo up by 5 pixels */
 }
 
-.gemini-logo img {
+.esi-logo img {
     width: 40px;
     height: 40px;
 }
+
+.esi-text {
+    font-weight: 500; /* Bold font */
+    font-size: 18px;
+    margin-left: 5px;
+    color: var(--text);
+}
+
+.esi-logo.hidden {
+    display: none !important;
+}
+
 
 .main-container{
     max-width: 900px;
@@ -51,10 +64,7 @@
 }
 
 .main .greet span{
-    background: -webkit-linear-gradient(16deg, #4b90ff, #ff5546);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--text);
 }
 
 .main .cards{
@@ -124,7 +134,7 @@
 
 .input-box textarea{
     flex: 1;
-    max-height: 40px;
+    max-height: 60px;
     border: none;
     background: transparent;
     outline: none;
@@ -169,7 +179,7 @@
 .result{
     padding: 0 5px;
     /* breathing room so bubbles don't sit under input */
-    padding-bottom: 120px;
+    padding-bottom: 20px;
     max-height: 80vh;
     overflow-y: scroll;
 }
@@ -203,7 +213,7 @@
 
 /* Bubble width rules */
 .msg-row.assistant .assistant-bubble{ max-width:100%; width:100%; }
-.msg-row.user .user-bubble{ max-width:90%; width:fit-content; align-self:flex-end; }
+.msg-row.user .user-bubble{ max-width:100%; width:fit-content; align-self:flex-end; }
 
 /* Utility to force full width inside message column */
 .full-width{

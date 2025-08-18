@@ -40,7 +40,7 @@ const ContextProvider = (props) => {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [showAllSessions, setShowAllSessions] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState([]);
-    const [artifacts, setArtifacts] = useState([]);
+    const [sidebarExtended, setSidebarExtended] = useState(true);
 
     // Auth state
     const [user, setUser] = useState(null); // supabase user or null
@@ -149,7 +149,6 @@ const ContextProvider = (props) => {
         setRecentPrompt('');
         setResultData('');
         setMessages([]);
-        setArtifacts([]);
     }
     
 
@@ -159,10 +158,6 @@ const ContextProvider = (props) => {
 
     const removeUploadedFile = (fileName) => {
         setUploadedFiles(prev => prev.filter(f => f.name !== fileName));
-    };
-
-    const addArtifact = (artifact) => {
-        setArtifacts(prev => [...prev, artifact]);
     };
 
     const onSent = async (prompt, file = null) => {
@@ -249,9 +244,6 @@ const ContextProvider = (props) => {
         try {
             const response = await runChatWithHistory(historyForApi, { verbosity, temperature }, file);
             const responseText = response.text || "Sorry, I can't complete that request. Please try again.";
-            if (response.artifacts && Array.isArray(response.artifacts)) {
-                response.artifacts.forEach(artifact => addArtifact(artifact));
-            }
             handleApiResponse(responseText, sid, false, null, assistantMessageIndex);
         } catch (error) {
             console.error('Error in onSent (non-streaming):', error);
@@ -402,8 +394,8 @@ const ContextProvider = (props) => {
         uploadedFiles,
         addUploadedFile,
         removeUploadedFile,
-        artifacts,
-        addArtifact,
+        sidebarExtended,
+        setSidebarExtended,
     }
 
     // Add editing function after we have access to state setters

@@ -26,9 +26,14 @@
 [data-theme="dark"] .sidebar .recent-entry,
 [data-theme="dark"] .sidebar .recent-entry .pin-badge,
 [data-theme="dark"] .sidebar .recent-title,
-[data-theme="dark"] .sidebar .bottom,
+/*[data-theme="dark"] .sidebar .bottom,
 [data-theme="dark"] .sidebar .bottom-item{
     color: inherit !important;
+}*/
+
+/* Ensure recent entry text is white in dark mode */
+[data-theme="dark"] .sidebar .recent-entry {
+    color: #ffffff !important;
 }
 
 /* Icon images that are SVG via currentColor will follow; raster icons remain unchanged */
@@ -44,12 +49,17 @@
 [data-theme="dark"] .sidebar .recent-entry .more-btn:hover{ background: rgba(255,255,255,0.06); }
 
 /* Invert raster icons (PNG/JPG) in dark mode */
-[data-theme="dark"] .sidebar img,
+[data-theme="dark"] .sidebar :not(.esi-logo-sidebar):not(.user-avatar-container) img,
 [data-theme="dark"] .sidebar .recent-entry .more-btn img{
     filter: invert(1) brightness(1.2) contrast(0.95);
 }
 [data-theme="dark"] .sidebar .new-chat img{
     filter: invert(1) brightness(1.2) contrast(0.95);
+}
+
+/* Override inversion for user avatar */
+[data-theme="dark"] .sidebar .user-avatar-container img {
+    filter: none !important;
 }
 
 /* Dark mode styling for Font Awesome icons */
@@ -69,9 +79,34 @@
     vertical-align: middle;
 }
 
+.esi-logo-sidebar {
+    display: flex;
+    align-items: center;
+    justify-content: left !important;
+    cursor: pointer;
+    transform: translateY(-10px); /* Move logo up by 5 pixels */
+}
+
+.esi-logo-sidebar img {
+    width: 40px !important;
+    height: 40px !important;
+    filter: none !important;
+}
+
+.sidebar.collapsed .esi-logo-sidebar {
+    display: none !important;
+}
+
+.esi-text {
+    font-weight: 500; /* Bold font */
+    font-size: 18px;
+    margin-left: 5px;
+    color: var(--text);
+}
+
 
 .sidebar.collapsed{
-    width: 50px;
+    width: 60px;
 }
 
 
@@ -79,6 +114,7 @@
 .sidebar .new-chat img {
     width: 20px;
     height: 20px;
+    font-size: 16px;
 }
 
 .sidebar .menu{
@@ -91,7 +127,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px;
+    padding: 5px;
     background-color: transparent;
     border-radius: 10px;
     font-size: 14px;
@@ -118,7 +154,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px 0;
+    padding: 5px 0;
     width: 100%;
     position: relative;
 }
@@ -163,7 +199,7 @@
     color: #000 !important;
     position: relative !important;
     z-index: 1000 !important;
-    font-size: 20px !important;
+    font-size: 16px !important;
     width: 20px !important;
     height: 20px !important;
     transition: all 0.3s ease !important;
@@ -263,6 +299,7 @@
     max-height: calc(100vh - 260px);
     padding-bottom: 70px; /* ensure bottom actions aren’t overlapped by scrollbar */
 }
+
 .sidebar.collapsed .recent{
     max-height: calc(100vh - 200px);
     padding-bottom: 70px;
@@ -276,7 +313,7 @@
     margin-bottom: 10px;
     font-size: 14px;
     border-radius: 10px;
-    padding: 10px;
+    padding: 5px;
     transition: background-color 0.2s ease;
 }
 
@@ -351,7 +388,7 @@
 .sidebar .recent-entry .menu{
     position: absolute;
     right: 8px;
-    top: 36px;
+    top: 25px;
     background: var(--panel-bg);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -379,8 +416,21 @@
 
 .sidebar .recent-entry:hover{
     background-color: #e2e6eb;
+  }
+
+/* Smaller icons for uploaded files (PDF and data files) */
+.sidebar .recent-entry .fi{
+    font-size: 14px;
 }
 
+/* User avatar hover effect */
+.user-avatar-container:hover {
+  background-color: #e2e6eb;
+}
+
+[data-theme="dark"] .user-avatar-container:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
 .sidebar .bottom{
     display: flex;
     flex-direction: column;
@@ -399,14 +449,26 @@
 
 .sidebar-toggle {
     z-index: 10;
-    position: relative;
+    position: absolute;
+    top: 25px;
+    right: 15px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     height: 20px;
     width: 20px;
     border-radius: 5px;
+    cursor: pointer;
   }
+  
+.sidebar.collapsed .sidebar-toggle {
+    position: absolute; /* Keep it absolute instead of relative */
+    top: 25px;
+    left: 50%;
+    transform: translateX(-50%); /* Center it horizontally */
+    right: auto;
+    margin-bottom: 0; /* Remove margin that pushes content down */
+}
   
 /* Container for sidebar icons */
 .sidebar-icons {
@@ -416,14 +478,16 @@
     margin-bottom: 20px;
     padding: 0; /* Remove padding to allow full width */
     align-items: flex-start; /* Align items to the start */
+    justify-content: left;
     height: auto; /* Allow height to adjust to content */
+    margin-top: 5px; /* Apply top margin by default */
 }
+
 
 .sidebar .sidebar-toggle:hover {
     opacity: 1;
     background-color: #e2e6eb;
 }
-
 
 
 /* Search box styling */
@@ -433,13 +497,14 @@
     display: flex;
     align-items: center;
     position: relative;
-    height: 20px; /* Set consistent height */
+    height: 25px; /* Set consistent height */
     width: 100%; /* Make search box take full width */
 }
 
 .sidebar.collapsed .search-box {
     padding: 0;
     margin-bottom: 0;
+    margin-top: 10px; 
 }
 
 .sidebar.collapsed .search-icon {
@@ -540,6 +605,7 @@
     height: auto; /* Allow height to adjust to content */
     margin-bottom: 20px;
     align-items: center; /* Center items when collapsed */
+    margin-top: 35px; /* Keep icons near the top when collapsed */
 }
 
 .sidebar.collapsed .new-chat-icon {
