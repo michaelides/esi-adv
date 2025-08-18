@@ -62,6 +62,13 @@
     color: white;
 }
 
+.sidebar .fi {
+    font-size: 20px;
+    line-height: 1;
+    display: inline-block;
+    vertical-align: middle;
+}
+
 
 .sidebar.collapsed{
     width: 50px;
@@ -84,7 +91,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 5px; 
+    padding: 10px;
     background-color: transparent;
     border-radius: 10px;
     font-size: 14px;
@@ -108,18 +115,15 @@
 
 /* Make "+ New Chat" circular when collapsed */
 .sidebar.collapsed .new-chat{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 5px 0;
+    display: block;
+    text-align: center;
+    padding: 10px 0;
     width: 100%;
     position: relative;
 }
 .sidebar.collapsed .new-chat .new-chat-icon{
-    width: 20px;
-    height: 20px;
     padding: 5px;
-    margin: 0 auto;
+    margin: 0;
 }
 .sidebar.collapsed .new-chat p{
     display: none;
@@ -203,6 +207,10 @@
     display: none !important;
 }
 
+.sidebar.collapsed .recent-title {
+    justify-content: center;
+}
+
 /* Ensure icons in recent titles remain visible when collapsed */
 .sidebar.collapsed .recent-title .fa-regular{
     opacity: 1 !important;
@@ -265,12 +273,20 @@
     margin-bottom: 10px;
     font-size: 14px;
     border-radius: 10px;
-    padding: 5px 10px;
+    padding: 10px;
     transition: background-color 0.2s ease;
 }
 
-.sidebar .recent-title:hover{
-    background-color: rgba(0, 0, 0, 0.05);
+.sidebar .recent-title:hover,
+.sidebar .new-chat:hover,
+.sidebar .bottom-item:hover {
+    background-color: #e2e6eb;
+}
+
+[data-theme="dark"] .sidebar .recent-title:hover,
+[data-theme="dark"] .sidebar .new-chat:hover,
+[data-theme="dark"] .sidebar .bottom-item:hover {
+    background-color: rgba(255, 255, 255, 0.06);
 }
 
 .sidebar .recent-title svg{
@@ -369,8 +385,12 @@
 }
 
 .sidebar .bottom-item{
-    padding-right:10px;
+    padding: 10px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 10px;
 }
 
 
@@ -402,24 +422,6 @@
 }
 
 
-/* New chat icon styling */
-.sidebar .new-chat-icon {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    opacity: 1;
-    transition: opacity 0.2s ease, background-color 0.2s ease;
-    border-radius: 2px;
-/*    padding: 5px 0px;*/
-    display: inline-flex; /* Ensure proper alignment */
-    align-items: center; /* Center vertically */
-    justify-content: center; /* Center horizontally */
-}
-
-.sidebar .new-chat-icon:hover {
-    opacity: 1;
-    background-color: #e2e6eb;
-}
 
 /* Search box styling */
 .sidebar .search-box {
@@ -523,14 +525,7 @@
     filter: none;
 }
 
-[data-theme="dark"] .sidebar .new-chat-icon:hover {
-    background-color: rgba(255,255,255,0.1);
-}
 
-/* Dark mode hover highlighting for section headings */
-[data-theme="dark"] .sidebar .recent-title:hover {
-    background-color: rgba(255, 255, 255, 0.06);
-}
 
 /* Ensure icons stay in same position in collapsed mode */
 .sidebar.collapsed .sidebar-icons {
@@ -541,12 +536,8 @@
 }
 
 .sidebar.collapsed .new-chat-icon {
-    display: inline-flex; /* Ensure proper alignment */
-    align-items: center; /* Center vertically */
-    justify-content: center; /* Center horizontally */
-    height: 20px; /* Match height of other icons */
-    width: 20px;
-    margin: 0 auto; /* Center the icon */
+    margin: 0; /* Remove auto margin */
+    display: inline-block;
 }
 
 
