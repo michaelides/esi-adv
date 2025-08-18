@@ -158,7 +158,7 @@ const Sidebar = () => {
           </div>
 
           <div className="new-chat" onClick={()=>newChat()} title="New chat">
-            <i className="fi fi-br-plus new-chat-icon" />
+            <i className="fi fi-rr-plus new-chat-icon" />
             {extended && <p>New Chat</p>}
           </div>
         </div>
@@ -166,7 +166,7 @@ const Sidebar = () => {
         <div className="recent" ref={(el)=>{ /* optional ref */ }}>
           <div className="recent-title" onClick={() => setRecentOpen(!recentOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <i className="fi fi-rs-messages"></i>
+              <i className="fi fi-rr-messages"></i>
               {extended && <span className="recent-title-text">Recent</span>}
             </div>
             {extended && (recentOpen ? <ChevronUp /> : <ChevronDown />)}

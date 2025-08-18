@@ -176,8 +176,13 @@
     color: white !important;
 }
 
+/*
+  The rule below previously hid the entire .recent section when collapsed,
+  which also hid the titles for "Recent" and "Uploaded Files".
+  By removing `.sidebar.collapsed .recent`, we allow the titles to remain
+  visible, and rely on a more specific rule to hide the content within them.
+*/
 .sidebar.collapsed .new-chat p,
-.sidebar.collapsed .recent,
 .sidebar.collapsed .bottom p{
     opacity: 0;
     pointer-events: none;
@@ -523,6 +528,10 @@
 [data-theme="dark"] .sidebar .new-chat-icon {
     color: #ffffff;
     filter: none;
+}
+
+.sidebar .new-chat-icon {
+    color: #1F1F1F;
 }
 
 
